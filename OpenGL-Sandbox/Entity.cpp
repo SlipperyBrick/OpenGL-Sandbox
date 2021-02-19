@@ -60,3 +60,11 @@ void Entity::UpdateModel()
 
 	m_model = glm::scale(m_model, m_scale);
 }
+
+void Entity::ResetModel()
+{
+	m_model = glm::mat4(1.f);
+	m_translate = glm::vec3(0.f, 0.f, 0.f);
+	m_rotation = glm::vec3(0.f, 0.f, 0.f);
+	m_scale = glm::vec3(1.f, 1.f, 1.f);
+}

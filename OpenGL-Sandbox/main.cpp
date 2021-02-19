@@ -1,4 +1,6 @@
 
+#include <vector>
+
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 #include <glm/glm.hpp>
@@ -10,6 +12,7 @@
 #include "Shader.h"
 #include "Camera.h"
 #include "Mesh.h"
+#include "Model.h"
 #include "Texture.h"
 #include "PointLight.h"
 
@@ -36,27 +39,34 @@ int main() {
 
 	Camera camera(glm::vec3(0.f, 0.f, 1.f), glm::vec3(0, 1, 0), 0, 0, 1, 1, 90.f);
 
-	PointLight pointLight;
-	pointLight.SetColour({ 0.5f, 0.5f, 0.5f });
-	pointLight.SetIntensity(1.f);
+	std::vector<PointLight> pointlights(4);
+	{
+	   pointlights[0].SetPosition(glm::vec3(-10.0f,  10.0f, 10.0f));
+	   pointlights[1].SetPosition(glm::vec3( 10.0f,  10.0f, 10.0f));
+	   pointlights[2].SetPosition(glm::vec3(-10.0f, -10.0f, 10.0f));
+	   pointlights[3].SetPosition(glm::vec3( 10.0f, -10.0f, 10.0f));
+	   
+	   pointlights[0].SetColour(glm::vec3(300.0f, 300.0f, 300.0f));
+	   pointlights[1].SetColour(glm::vec3(300.0f, 300.0f, 300.0f));
+	   pointlights[2].SetColour(glm::vec3(300.0f, 300.0f, 300.0f));
+	   pointlights[3].SetColour(glm::vec3(300.0f, 300.0f, 300.0f));
+	}
+
+	Texture Albedo   ("Textures/Dirty Metal Sheet/Albedo_4K__vbsieik.jpg");
+	Texture Normal   ("Textures/Dirty Metal Sheet/Normal_4K__vbsieik.jpg");
+	Texture Roughness("Textures/Dirty Metal Sheet/Roughness_4K__vbsieik.jpg");
+	Texture AO       ("Textures/Dirty Metal Sheet/AO_4K__vbsieik.jpg");
+	Texture Metallic ("Textures/Dirty Metal Sheet/AO_4K__vbsieik.jpg");
 
 	Mesh obj;
 	obj.Create(quadVerts, quadIndices, 32, 6);
 
-	Texture albedo("Textures/Charred Brick Wall/Albedo_4K__vcinbbafw.jpg");
-	Texture ao("Textures/Charred Brick Wall/AO_4K__vcinbbafw.jpg");
-	Texture normal("Textures/Charred Brick Wall/Normal_4K__vcinbbafw.jpg");
-	Texture roughness("Textures/Charred Brick Wall/Roughness_4K__vcinbbafw.jpg");
+	Model shpere;
+	shpere.Load("Models/shpere.fbx");
 
-	Texture albedo2      ("Textures/Dirty Metal Sheet/Albedo_4K__vbsieik.jpg");
-	Texture ao2          ("Textures/Dirty Metal Sheet/AO_4K__vbsieik.jpg");
-	Texture normal2      ("Textures/Dirty Metal Sheet/Normal_4K__vbsieik.jpg");
-	Texture roughness2   ("Textures/Dirty Metal Sheet/Roughness_4K__vbsieik.jpg");
-
-	
-	glm::vec3 lightAmbient(1.f);
-	glm::vec3 lightDiffuse(1.f);
-	glm::vec3 lightSpecular(1.f);
+	int nrRows = 7;
+	int nrColumns = 7;
+	float spacing = 2.5;
 
 	while (window.IsOpen()) {
 
@@ -72,48 +82,69 @@ int main() {
 
 			ImGui::Begin("GUI");
 			ImGui::Text("Application average %.2f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-			ImGui::DragFloat3("lightAmbient",  (float*)&lightAmbient,  0.01, 0.f, 1.f);
-			ImGui::DragFloat3("lightDiffusec", (float*)&lightDiffuse,  0.01, 0.f, 1.f);
-			ImGui::DragFloat3("lightSpecular", (float*)&lightSpecular, 0.01, 0.f, 1.f);
-
-			ImGui::DragFloat("Constant", (float*)pointLight.GetConstantPtr(), 0.01);
-			ImGui::DragFloat("Linear", (float*)pointLight.GetLinearPtr(), 0.01);
-			ImGui::DragFloat("Quadratic", (float*)pointLight.GetQuadraticPtr(), 0.01);
-			ImGui::DragFloat("Intensity", (float*)pointLight.GetIntensityPtr(), 0.01);
-
-			ImGui::ColorEdit3("Colour", (float*)pointLight.GetColourPtr());
-			ImGui::DragFloat3("light", (float*)pointLight.GetPositionPtr(), 0.01);
-
 			ImGui::End();
 		} 
 
 		shader.Bind();
 
-		pointLight.SetUniforms(&shader);
-
-		albedo.Bind(0);
-		ao.Bind(1);
-		normal.Bind(2);
-		roughness.Bind(3);
-
-		shader.Set1i(0, "u_AlbedoTexture");
-		shader.Set1i(1, "u_AOTexture");
-		shader.Set1i(2, "u_NormalTexture");
-		shader.Set1i(3, "u_RoughnessTexture");
+		Albedo.Bind(0);
+		Normal.Bind(1);
+		Roughness.Bind(2);
+		AO.Bind(3);
+		Metallic.Bind(4);
 
 		shader.SetVec3f(camera.GetCameraPosition(), "u_cameraPosition");
-
-		shader.SetMat4f(obj.GetModel(), "u_Model", false);
 		shader.SetMat4f(camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()), "u_Projection", false);
 		shader.SetMat4f(camera.CalculateViewMatrix(), "u_View", false);
+		
+		shader.Set1i(0, "u_AlbedoTexture");
+		shader.Set1i(1, "u_NormalTexture");
+		shader.Set1i(2, "u_RoughnessTexture");
+		shader.Set1i(3, "u_AOTexture");
+		shader.Set1i(4, "u_MetallicTexture");
 
-		shader.SetVec3f(lightAmbient,  "u_lightAmbient");
-		shader.SetVec3f(lightDiffuse,  "u_lightDiffuse");
-		shader.SetVec3f(lightSpecular, "u_lightSpecular");
+		shpere.ResetModel();
+		for (int row = 0; row < nrRows; row++) {
 
-		obj.Render();
+			for (int col = 0; col < nrColumns; col++) {
+
+				// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
+				// on direct lighting.
+
+				shpere.ResetModel();
+				shpere.SetRotate({ 90.f, 0.f, 0.f });
+				//shpere.SetScale({ 0.01f, 0.01f, 0.01f });
+				shpere.SetPosition(glm::vec3(
+					(col - (nrColumns / 2)) * spacing,
+					(row - (nrRows / 2)) * spacing,
+					0.0f
+				));
+
+				shader.SetMat4f(shpere.GetModel(), "u_Model", false);
+				shpere.Render();
+			}
+		}
 	
+		// render light source (simply re-render sphere at light positions)
+		// this looks a bit off as we use the same shader, but it'll make their positions obvious and 
+		// keeps the codeprint small.
+		for (unsigned int i = 0; i < pointlights.size(); ++i)
+		{
+			glm::vec3 newPos = pointlights[i].GetPosition() + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
+			newPos = pointlights[i].GetPosition();
+			std::string pos = "pointLight[" + std::to_string(i) + "].m_position";
+			shader.SetVec3f(newPos, pos.c_str());
+			std::string col = "pointLight[" + std::to_string(i) + "].m_colour";
+			shader.SetVec3f(pointlights[i].GetColour(), col.c_str());
+
+			shpere.ResetModel();
+			shpere.SetPosition(newPos);
+			shpere.SetScale(glm::vec3(0.02f));
+			shader.SetMat4f(shpere.GetModel(), "u_Model", false);
+			shpere.Render();
+
+		}
+
 		shader.Unbind();
 		
 		

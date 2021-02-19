@@ -19,6 +19,7 @@ public:
 
 	glm::mat4 GetModel();
 	void UpdateModel();
+	void ResetModel();
 
 private:
 	glm::mat4 m_model;

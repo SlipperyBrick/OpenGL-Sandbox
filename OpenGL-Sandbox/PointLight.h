@@ -26,6 +26,6 @@ public:
 private:
     float m_constant;
     float m_linear;
-    float m_quadratic;
+    float m_exponent;
 };
 

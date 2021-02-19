@@ -4,7 +4,7 @@ PointLight::PointLight()
 {
     m_constant = 1.f;
     m_linear = 1.f;
-    m_quadratic = 1.f;
+    m_exponent = 1.f;
 }
 
 PointLight::~PointLight()
@@ -21,9 +21,9 @@ void PointLight::SetLinear(float linear)
     m_linear = linear;
 }
 
-void PointLight::SetQuadratic(float quadratic)
+void PointLight::SetQuadratic(float exponent)
 {
-    m_quadratic = quadratic;
+    m_exponent = exponent;
 }
 
 float PointLight::GetConstant()
@@ -38,7 +38,7 @@ float PointLight::GetLinear()
 
 float PointLight::GetQuadratic()
 {
-    return m_quadratic;
+    return m_exponent;
 }
 
 float* PointLight::GetConstantPtr()
@@ -53,7 +53,7 @@ float* PointLight::GetLinearPtr()
 
 float* PointLight::GetQuadraticPtr()
 {
-    return &m_quadratic;
+    return &m_exponent;
 }
 
 void PointLight::SetUniforms(Shader* shader)
