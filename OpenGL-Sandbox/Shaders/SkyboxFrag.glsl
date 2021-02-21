@@ -1,0 +1,13 @@
+#version 450    
+
+in vec3 vs_texcoord;
+
+out vec4 colour;
+
+uniform samplerCube skybox;
+
+void main() {
+
+  colour = texture(skybox, vs_texcoord);
+
+}

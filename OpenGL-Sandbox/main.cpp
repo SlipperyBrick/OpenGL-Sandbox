@@ -15,6 +15,7 @@
 #include "Model.h"
 #include "Texture.h"
 #include "PointLight.h"
+#include "Skybox.h"
 
 GLfloat quadVerts[] = {
 	-1.f,   1.f, 0.0f,  1.0f, 0.0f,  0.0f, 0.0f, 1.0f,
@@ -37,7 +38,18 @@ int main() {
 
 	GuiLayer GuiLayer(window.GetWindow());
 
-	Camera camera(glm::vec3(0.f, 0.f, 1.f), glm::vec3(0, 1, 0), 0, 0, 1, 1, 90.f);
+	std::vector<std::string> faces = {
+		"Textures/Cubemaps/BlueSky/bluecloud_rt.jpg",
+		"Textures/Cubemaps/BlueSky/bluecloud_lf.jpg",
+		"Textures/Cubemaps/BlueSky/bluecloud_up.jpg",
+		"Textures/Cubemaps/BlueSky/bluecloud_dn.jpg",
+		"Textures/Cubemaps/BlueSky/bluecloud_bk.jpg",
+		"Textures/Cubemaps/BlueSky/bluecloud_ft.jpg",
+	};
+
+	Skybox skybox(faces);
+
+	Camera camera(glm::vec3(0.f, 0.f, 10.f), glm::vec3(0, 1, 0), 0, 0, 1, 1, 90.f);
 
 	std::vector<PointLight> pointlights(4);
 	{
@@ -52,11 +64,11 @@ int main() {
 	   pointlights[3].SetColour(glm::vec3(300.0f, 300.0f, 300.0f));
 	}
 
-	Texture Albedo   ("Textures/Dirty Metal Sheet/Albedo_4K__vbsieik.jpg");
-	Texture Normal   ("Textures/Dirty Metal Sheet/Normal_4K__vbsieik.jpg");
-	Texture Roughness("Textures/Dirty Metal Sheet/Roughness_4K__vbsieik.jpg");
-	Texture AO       ("Textures/Dirty Metal Sheet/AO_4K__vbsieik.jpg");
-	Texture Metallic ("Textures/Dirty Metal Sheet/AO_4K__vbsieik.jpg");
+	Texture Albedo   ("Textures/rustediron1-alt2-bl/rustediron2_basecolor.png");
+	Texture Normal   ("Textures/rustediron1-alt2-bl/rustediron2_normal.png");
+	Texture Roughness("Textures/rustediron1-alt2-bl/rustediron2_roughness.png");
+	Texture AO       ("Textures/rustediron1-alt2-bl/rustediron2_ao.png");
+	Texture Metallic ("Textures/rustediron1-alt2-bl/rustediron2_metallic.png");
 
 	Mesh obj;
 	obj.Create(quadVerts, quadIndices, 32, 6);
@@ -76,6 +88,8 @@ int main() {
 			camera.keyControl(window.GetsKeys(), window.GetDeltaTime());
 		}
 
+		skybox.Render(camera.CalculateViewMatrix(), camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()));
+
 		// GUI //
 		{
 			GuiLayer.Begin();
@@ -90,7 +104,7 @@ int main() {
 		Albedo.Bind(0);
 		Normal.Bind(1);
 		Roughness.Bind(2);
-		AO.Bind(3);
+		//AO.Bind(3);
 		Metallic.Bind(4);
 
 		shader.SetVec3f(camera.GetCameraPosition(), "u_cameraPosition");
@@ -106,10 +120,12 @@ int main() {
 		shpere.ResetModel();
 		for (int row = 0; row < nrRows; row++) {
 
+			shader.Set1f((float)row / (float)nrRows, "u_metallic");
 			for (int col = 0; col < nrColumns; col++) {
 
 				// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
 				// on direct lighting.
+				shader.Set1f(glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f), "u_roughness");
 
 				shpere.ResetModel();
 				shpere.SetRotate({ 90.f, 0.f, 0.f });
@@ -128,7 +144,7 @@ int main() {
 		// render light source (simply re-render sphere at light positions)
 		// this looks a bit off as we use the same shader, but it'll make their positions obvious and 
 		// keeps the codeprint small.
-		for (unsigned int i = 0; i < pointlights.size(); ++i)
+		for (unsigned int i = 0; i < pointlights.size(); i++)
 		{
 			glm::vec3 newPos = pointlights[i].GetPosition() + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
 			newPos = pointlights[i].GetPosition();
@@ -137,11 +153,11 @@ int main() {
 			std::string col = "pointLight[" + std::to_string(i) + "].m_colour";
 			shader.SetVec3f(pointlights[i].GetColour(), col.c_str());
 
-			shpere.ResetModel();
-			shpere.SetPosition(newPos);
-			shpere.SetScale(glm::vec3(0.02f));
-			shader.SetMat4f(shpere.GetModel(), "u_Model", false);
-			shpere.Render();
+			//shpere.ResetModel();
+			//shpere.SetPosition(newPos);
+			//shpere.SetScale(glm::vec3(0.4f));
+			//shader.SetMat4f(shpere.GetModel(), "u_Model", false);
+			//shpere.Render();
 
 		}
 

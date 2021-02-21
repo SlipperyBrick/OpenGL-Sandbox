@@ -1,7 +1,6 @@
 #include "Texture.h"
 
-Texture::
-Texture()
+Texture::Texture()
 {
 }
 
@@ -37,22 +36,24 @@ void Texture::loadFromFile(const char* fileName)
 
 	unsigned char* image = SOIL_load_image(fileName, &this->m_width, &this->m_height, NULL, SOIL_LOAD_RGBA);
 
-	glGenTextures(1, &id);
-	glBindTexture(GL_TEXTURE_2D, id);
-
-	//https://learnopengl.com/Getting-started/Textures
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
-
-	if (image) {
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
-		glGenerateMipmap(GL_TEXTURE_2D);
+	if (!image) {
+		std::cout << "[ERROR]: Failed to load texture " << '"' << fileName << '"' << "\n";
 	}
-	else
-		std::cout << "[ERROR]: Texture loading failed {" << fileName << "}\n";
-
-	glBindTexture(GL_TEXTURE_2D, NULL);
-	SOIL_free_image_data(image);
+	else {
+		glGenTextures(1, &id);
+	    glBindTexture(GL_TEXTURE_2D, id);
+	    
+	    //https://learnopengl.com/Getting-started/Textures
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	    
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+	    glGenerateMipmap(GL_TEXTURE_2D);
+	    
+		glBindTexture(GL_TEXTURE_2D, NULL);
+		   
+	}
+	    SOIL_free_image_data(image);
 }

@@ -27,12 +27,13 @@ uniform sampler2D u_RoughnessTexture;
 uniform sampler2D u_AOTexture;
 uniform sampler2D u_MetallicTexture;
 
-vec3 u_albedo;
-float u_metallic;  
-float u_roughness;
-float u_ao;
+//vec3  u_albedo;
+uniform float u_metallic;  
+uniform float u_roughness;
+//uniform float u_ao;
 
 vec3 getNormalFromMap() {
+
     vec3 tangentNormal = texture(u_NormalTexture, vs_texcoord).xyz * 2.0 - 1.0;
 
     vec3 Q1  = dFdx(vs_position);
@@ -86,19 +87,13 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
 } 
 
-void main() {   
+vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, float ao) {
 
-    u_albedo = pow(texture(u_AlbedoTexture, vs_texcoord).rgb, vec3(2.2));
-    vec3 normal = getNormalFromMap();
-    u_metallic  = texture(u_MetallicTexture, vs_texcoord).r;
-    u_roughness = texture(u_RoughnessTexture, vs_texcoord).r;
-    u_ao = texture(u_AOTexture, vs_texcoord).r;
-
-    vec3 N = normalize(vs_normal);
+    
+    vec3 N = normalize(normal);
     vec3 V = normalize(u_cameraPosition - vs_position);
 
-     vec3 F0 = vec3(0.04); 
-    F0 = mix(F0, u_albedo, u_metallic);
+    vec3 F0 = mix(vec3(0.04), albedo, metallic);
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
@@ -113,13 +108,13 @@ void main() {
         vec3 radiance     = pointLight[i].m_colour * attenuation;        
         
         // cook-torrance brdf
-        float NDF = DistributionGGX(N, H, u_roughness);        
-        float G   = GeometrySmith(N, V, L, u_roughness);      
+        float NDF = DistributionGGX(N, H, roughness);        
+        float G   = GeometrySmith(N, V, L, roughness);      
         vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);       
         
         vec3 kS = F;
         vec3 kD = vec3(1.0) - kS;
-        kD *= 1.0 - u_metallic;	  
+        kD *= 1.0 - metallic;	  
         
         vec3 numerator    = NDF * G * F;
         float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
@@ -127,15 +122,27 @@ void main() {
             
         // add to outgoing radiance Lo
         float NdotL = max(dot(N, L), 0.0);                
-        Lo += (kD * u_albedo / PI + specular) * radiance * NdotL; 
+        Lo += (kD * albedo / PI + specular) * radiance * NdotL; 
     }   
 
-    vec3 ambient = vec3(0.03) * u_albedo * u_ao;
+    vec3 ambient = vec3(0.03) * albedo * ao;
     vec3 color = ambient + Lo;
 	
     color = color / (color + vec3(1.0));
     color = pow(color, vec3(1.0/2.2)); 
 
-    colour = vec4(color, 1.f);
+    return color;
+} 
+
+void main() {   
+
+    vec3  l_albedo     = pow(texture(u_AlbedoTexture, vs_texcoord).rgb, vec3(2.2));
+    vec3  l_normal = getNormalFromMap();
+    float l_metallic = texture(u_MetallicTexture, vs_texcoord).r * u_metallic;
+    float l_roughness = texture(u_RoughnessTexture, vs_texcoord).r * u_roughness;
+    float l_ao = texture(u_AOTexture, vs_texcoord).r;
+    
+
+    colour = vec4(CalculatePBR(l_albedo, l_normal, l_metallic, l_roughness, l_ao), 1.f);
     
 }
