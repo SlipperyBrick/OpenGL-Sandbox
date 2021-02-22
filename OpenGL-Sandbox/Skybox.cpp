@@ -1,5 +1,29 @@
 #include "Skybox.h"
 
+Skybox::Skybox() {
+
+	this->m_shader = new Shader();
+	m_shader->CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/SkyboxFrag.glsl");
+
+	this->m_mesh = nullptr;
+	this->m_cubemapID = 0;
+
+	m_cubemap = nullptr;
+	CreateMesh();
+}
+
+Skybox::Skybox(Texture* cubemap)
+{
+	this->m_shader = new Shader();
+	m_shader->CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/SkyboxFrag.glsl");
+
+	this->m_mesh = nullptr;
+	this->m_cubemapID = 0;
+
+	m_cubemap = cubemap;
+	CreateMesh();
+}
+
 Skybox::Skybox(std::vector<std::string> facesPaths)
 {
 	this->m_shader = new Shader();
@@ -8,9 +32,17 @@ Skybox::Skybox(std::vector<std::string> facesPaths)
 	this->m_mesh = nullptr;
 	this->m_cubemapID = 0;
 
-	CreateCubeMap(facesPaths.data());
+	CreateCubemap(facesPaths.data());
 	CreateMesh();
-	std::cout << this->m_cubemapID << "\n";
+}
+
+Skybox::Skybox(const char* HDRI) {
+
+	this->m_shader = new Shader(); //Shader for drawing skybox on render
+	m_shader->CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/SkyboxFrag.glsl");
+	
+	//CreateMeshCube
+	CreateMesh();
 }
 
 Skybox::~Skybox()
@@ -19,27 +51,29 @@ Skybox::~Skybox()
 
 void Skybox::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 {
-
-	viewMatrix = glm::mat4(glm::mat3(viewMatrix));
-
-	glDepthMask(GL_FALSE);
+	viewMatrix = glm::mat3(glm::mat4(viewMatrix));
+	//glDepthMask(GL_FALSE);
 
 	m_shader->Bind();
 
 	m_shader->SetMat4f(viewMatrix, "u_viewMatrix", false);
 	m_shader->SetMat4f(projectionMatrix, "u_projectionMatrix", false);
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, m_cubemapID);
+	m_cubemap->BindCubemap(0);
 
 	m_mesh->Render();
 
 	m_shader->Unbind();
-	glDepthMask(GL_TRUE);
+	//glDepthMask(GL_TRUE);
 
 }
 
-void Skybox::CreateCubeMap(std::string imagePath[6])
+void Skybox::SetCubemap(Texture* cubemap)
+{
+	this->m_cubemap = cubemap;
+}
+
+void Skybox::CreateCubemap(std::string imagePath[6])
 {
 
 	glGenTextures(1, &m_cubemapID);
@@ -71,42 +105,7 @@ void Skybox::CreateCubeMap(std::string imagePath[6])
 
 void Skybox::CreateMesh()
 {
-	//Define Cube
-	unsigned int cubeIndices[] = {
-		// front
-		0, 1, 2,
-		2, 1, 3,
-		// right
-		2, 3, 5,
-		5, 3, 7,
-		// back
-		5, 7, 4,
-		4, 7, 6,
-		// left
-		4, 6, 0,
-		0, 6, 1,
-		// top
-		4, 0, 5,
-		5, 0, 2,
-		// bottom
-		1, 6, 3,
-		3, 6, 7
-	};
-
-	float cubeVertices[] = {
-		-1.0f, 1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-		-1.0f, -1.0f, -1.0f,	0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-		1.0f, 1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-		1.0f, -1.0f, -1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-
-		-1.0f, 1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-		1.0f, 1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-		-1.0f, -1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f,
-		1.0f, -1.0f, 1.0f,		0.0f, 0.0f,		0.0f, 0.0f, 0.0f
-	};
-
-
 	this->m_mesh = new Mesh();
-	m_mesh->Create(cubeVertices, cubeIndices, 64, 36);
+	m_mesh->Create(GetCubeVerticesPtr(), GetCubeIndicesPtr(), cubeVerticesCount, cubeIndicesCount);
 
 }
