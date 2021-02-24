@@ -24,8 +24,7 @@ Skybox::Skybox(Texture* cubemap)
 	CreateMesh();
 }
 
-Skybox::Skybox(std::vector<std::string> facesPaths)
-{
+Skybox::Skybox(std::vector<std::string> facesPaths) {
 	this->m_shader = new Shader();
 	m_shader->CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/SkyboxFrag.glsl");
 
@@ -36,23 +35,12 @@ Skybox::Skybox(std::vector<std::string> facesPaths)
 	CreateMesh();
 }
 
-Skybox::Skybox(const char* HDRI) {
-
-	this->m_shader = new Shader(); //Shader for drawing skybox on render
-	m_shader->CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/SkyboxFrag.glsl");
-	
-	//CreateMeshCube
-	CreateMesh();
-}
-
 Skybox::~Skybox()
 {
 }
 
 void Skybox::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 {
-	//viewMatrix = glm::mat3(glm::mat4(viewMatrix));
-	//glDepthMask(GL_FALSE);
 
 	m_shader->Bind();
 
@@ -64,7 +52,7 @@ void Skybox::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 	m_mesh->Render();
 
 	m_shader->Unbind();
-	//glDepthMask(GL_TRUE);
+
 
 }
 

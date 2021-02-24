@@ -124,5 +124,8 @@
     <None Include="Shaders\FlatShadingFrag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
+    <None Include="Shaders\PrefilterFrag.glsl" />
+    <None Include="Shaders\BRDFShaderFrag.glsl" />
+    <None Include="Shaders\BRDFShaderVert.glsl" />
   </ItemGroup>
 </Project>

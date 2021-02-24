@@ -191,6 +191,7 @@ void Window::Init() {
 	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
+	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
 	//glEnable(GL_BLEND); //use alpha
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);

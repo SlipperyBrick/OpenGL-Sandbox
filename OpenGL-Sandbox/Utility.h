@@ -9,3 +9,4 @@ unsigned int* GetCubeIndicesPtr();
 float* GetCubeVerticesPtr();
 
 void renderCube();
+void renderQuad();

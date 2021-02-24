@@ -20,7 +20,7 @@ public:
 	Texture(const char* fileName);
 	~Texture();
 
-	GLuint const getTextureID();
+	GLuint const GetTextureID();
 	void Bind(const GLint textureUnit);
 	void Unbind();
 
@@ -34,6 +34,8 @@ public:
 
 	void CreateCubemapFromHDRI(const char* filepath);
 	void CreateIrradianceTexture(Texture* Cubemap);
+	void CreatePrefilterMap(Texture* environmentMap);
+	void CreateBRDFLookUpTable();
 
 private:
 
@@ -42,7 +44,6 @@ private:
 	int m_height;
 	int m_components;
 	int m_textureType;
-	int sudfhsdhfsjkdf;
 
 	unsigned int m_captureFBO, m_captureRBO;
 

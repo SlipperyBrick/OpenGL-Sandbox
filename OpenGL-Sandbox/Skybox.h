@@ -18,7 +18,6 @@ public:
 	Skybox();
 	Skybox(Texture* cubemap);
 	Skybox(std::vector<std::string> facesPaths); 
-	Skybox(const char* HDRI);
    ~Skybox();
 
    void Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix);

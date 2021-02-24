@@ -46,16 +46,19 @@ int main() {
 	Shader shader;
 	shader.CreateFromFile("Shaders/Vertex.glsl", "Shaders/Frag.glsl");
 
-	Shader flatShader;
-	flatShader.CreateFromFile("Shaders/Vertex.glsl", "Shaders/FlatShadingFrag.glsl");
-
 	GuiLayer GuiLayer(window.GetWindow());
 
 	Texture hdriCubemap;
-	hdriCubemap.CreateCubemapFromHDRI("Textures/HDRIs/herkulessaulen_4k.hdr");
-	
+	hdriCubemap.CreateCubemapFromHDRI("Textures/HDRIs/fireplace_8k.hdr");
+
 	Texture irradianceCubemap;
 	irradianceCubemap.CreateIrradianceTexture(&hdriCubemap);
+
+	Texture prefilterMap;
+	prefilterMap.CreatePrefilterMap(&hdriCubemap);
+
+	Texture brdfLUTMap;
+	brdfLUTMap.CreateBRDFLookUpTable();
 
 	Skybox skybox(&hdriCubemap);
 
@@ -73,11 +76,11 @@ int main() {
 	   pointlights[3].SetColour(glm::vec3(300.0f, 300.0f, 300.0f));
 	}
 
-	Texture Albedo   ("Textures/PBR/Dirty Metal Sheet/Albedo_4K__vbsieik.jpg");
-	Texture Normal   ("Textures/PBR/Dirty Metal Sheet/Normal_4K__vbsieik.jpg");
-	Texture Roughness("Textures/PBR/Dirty Metal Sheet/Roughness_4K__vbsieik.jpg");
-	Texture AO       ("Textures/PBR/Dirty Metal Sheet/AO_4K__vbsieik.jpg");
-	Texture Metallic ("Textures/PBR/Dirty Metal Sheet/AO_4K__vbsieik.jpg");
+	Texture Albedo   ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Albedo_4K__schvfgwp.jpg");
+	Texture Normal   ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Normal_4K__schvfgwp.jpg");
+	Texture Roughness("Textures/PBR/Gold (Au)_schvfgwp_Metal/Roughness_4K__schvfgwp.jpg");
+	Texture AO       ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
+	Texture Metallic ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
 
 	Mesh obj;
 	obj.Create(quadVerts, quadIndices, 32, 6);
@@ -97,6 +100,8 @@ int main() {
 	AO.Bind(3);
 	Metallic.Bind(4);
 	irradianceCubemap.Bind(5);
+	prefilterMap.Bind(6);
+	brdfLUTMap.Bind(7);
 
 	shader.Set1i(0, "u_AlbedoTexture");
 	shader.Set1i(1, "u_NormalTexture");
@@ -104,6 +109,9 @@ int main() {
 	shader.Set1i(3, "u_AOTexture");
 	shader.Set1i(4, "u_MetallicTexture");
 	shader.Set1i(5, "u_irradianceMap");
+	shader.Set1i(6, "u_prefilterMap");
+	shader.Set1i(7, "u_brdfLUT");
+
 
 	// render light source (simply re-render sphere at light positions)
     // this looks a bit off as we use the same shader, but it'll make their positions obvious and 

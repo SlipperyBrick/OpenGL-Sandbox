@@ -1,4 +1,4 @@
-#version 450    
+#version 450 core   
 
 in vec3 vs_texcoord;
 
@@ -8,11 +8,11 @@ uniform samplerCube skybox;
 
 void main() {
 
-  vec3 envColor = texture(skybox, vs_texcoord).rgb;
+    vec3 envColor = texture(skybox, vs_texcoord).rgb;
+    //vec3 envColor = textureLod(skybox, vs_texcoord, 1.2).rgb; 
     
     envColor = envColor / (envColor + vec3(1.0));
     envColor = pow(envColor, vec3(1.0/2.2)); 
   
     colour = vec4(envColor, 1.0);
-
 }

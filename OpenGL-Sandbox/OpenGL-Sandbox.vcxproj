@@ -171,11 +171,14 @@
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\BRDFShaderFrag.glsl" />
+    <None Include="Shaders\BRDFShaderVert.glsl" />
     <None Include="Shaders\EquirectangularToCubemapFrag.glsl" />
     <None Include="Shaders\EquirectangularToCubemapVert.glsl" />
     <None Include="Shaders\FlatShadingFrag.glsl" />
     <None Include="Shaders\Frag.glsl" />
     <None Include="Shaders\IrradianceConvolutionFrag.glsl" />
+    <None Include="Shaders\PrefilterFrag.glsl" />
     <None Include="Shaders\SkyboxFrag.glsl" />
     <None Include="Shaders\SkyboxVert.glsl" />
     <None Include="Shaders\Vertex.glsl" />

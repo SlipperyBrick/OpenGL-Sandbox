@@ -28,6 +28,8 @@ uniform sampler2D u_AOTexture;
 uniform sampler2D u_MetallicTexture;
 
 uniform samplerCube u_irradianceMap;
+uniform samplerCube u_prefilterMap;
+uniform sampler2D   u_brdfLUT;
 
 //vec3  u_albedo;
 uniform float u_metallic;  
@@ -107,6 +109,7 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
     vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
 
+
     // reflectance equation
     vec3 Lo = vec3(0.0);
     for(int i = 0; i < 4; i++) 
@@ -116,7 +119,7 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
         vec3 H = normalize(V + L);
         float distance = length(pointLight[i].m_position - vs_position);
         float attenuation = 1.0 / (distance * distance);
-        vec3 radiance =pointLight[i].m_colour * attenuation;
+        vec3 radiance = pointLight[i].m_colour * attenuation;
 
         // Cook-Torrance BRDF
         float NDF = DistributionGGX(N, H, roughness);   
@@ -155,9 +158,18 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
     vec3 kS = F;
     vec3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;	
+    
     vec3 irradiance = texture(u_irradianceMap, N).rgb;
     vec3 diffuse      = irradiance * albedo;
-    vec3 color = diffuse + Lo;
+
+    const float MAX_REFLECTION_LOD = 4.0;
+    vec3 prefilteredColor = textureLod(u_prefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;    
+    vec2 brdf  = texture(u_brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
+    vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+
+     vec3 ambient = (kD * diffuse + specular) * ao;
+
+    vec3 color = ambient + Lo;
 
     // HDR tonemapping
     color = color / (color + vec3(1.0));
@@ -182,11 +194,11 @@ void main() {
          l_roughness = texture(u_RoughnessTexture, vs_texcoord).r;
          l_ao        = texture(u_AOTexture, vs_texcoord).r;
     } else {
-        l_albedo = vec3(.5, 0, 0);
+        l_albedo = vec3(.5, 0, 0);//texture(u_brdfLUT, vs_texcoord).rgb; 
         l_normal = vs_normal;
         l_metallic = u_metallic; 
         l_roughness = u_roughness; 
-        l_ao = 0.; 
+        l_ao = 1.; 
     }
 
 
