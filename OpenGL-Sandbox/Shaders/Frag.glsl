@@ -1,4 +1,4 @@
-#version 450                                   
+#version 450 core                                  
 
 const float PI = 3.14159265359;
   
@@ -34,29 +34,7 @@ uniform float u_metallic;
 uniform float u_roughness;
 //uniform float u_ao;
 
-float VanDerCorpus(uint n, uint base) {
-
-    float invBase = 1.0 / float(base);
-    float denom   = 1.0;
-    float result  = 0.0;
-
-    for(uint i = 0u; i < 32u; ++i)
-    {
-        if(n > 0u)
-        {
-            denom   = mod(float(n), 2.0);
-            result += denom * invBase;
-            invBase = invBase / 2.0;
-            n       = uint(float(n) / 2.0);
-        }
-    }
-
-    return result;
-}
-
-vec2 HammersleyNoBitOps(uint i, uint N) {
-    return vec2(float(i)/float(N), VanDerCorpus(i, 2u));
-}
+uniform bool u_PBRToggle;
 
 vec3 getNormalFromMap() {
 
@@ -113,6 +91,11 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0) {
     return F0 + (1.0 - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
 } 
 
+vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
+
+    return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
+}   
+
 vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, float ao) {
 
     vec3 N = normal;
@@ -126,7 +109,7 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
-    for(int i = 0; i < 4; ++i) 
+    for(int i = 0; i < 4; i++) 
     {
         // calculate per-light radiance
         vec3 L = normalize(pointLight[i].m_position - vs_position);
@@ -138,7 +121,7 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
         // Cook-Torrance BRDF
         float NDF = DistributionGGX(N, H, roughness);   
         float G   = GeometrySmith(N, V, L, roughness);    
-        vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);        
+        vec3 F    = fresnelSchlick(max(dot(H, V), 0.0), F0);   //fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); //     
         
         vec3 nominator    = NDF * G * F;
         float denominator = 4 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0) + 0.001; // 0.001 to prevent divide by zero.
@@ -162,16 +145,19 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
         Lo += (kD * albedo / PI + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
     }   
     
-    // ambient lighting (we now use IBL as the ambient term)
-    vec3 kS = fresnelSchlick(max(dot(N, V), 0.0), F0);
+     // ambient lighting (we now use IBL as the ambient term)
+     //vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); 
+     //vec3 kD = 1.0 - kS;
+     //vec3 irradiance = texture(u_irradianceMap, N).rgb;
+     //vec3 diffuse    = irradiance * albedo;
+     //vec3 ambient    = (kD * diffuse) * ao; 
+    vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
+    vec3 kS = F;
     vec3 kD = 1.0 - kS;
-    kD *= 1.0 - metallic;	  
-
-    vec3 diffuse      = texture(u_irradianceMap, N).rgb * albedo * kD;
-    vec3 ambient = diffuse * ao;
-    // vec3 ambient = vec3(0.002);
-    
-    vec3 color = ambient + Lo;
+    kD *= 1.0 - metallic;	
+    vec3 irradiance = texture(u_irradianceMap, N).rgb;
+    vec3 diffuse      = irradiance * albedo;
+    vec3 color = diffuse + Lo;
 
     // HDR tonemapping
     color = color / (color + vec3(1.0));
@@ -183,12 +169,26 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
 
 void main() {   
 
-    vec3  l_albedo     = pow(texture(u_AlbedoTexture, vs_texcoord).rgb, vec3(2.2));
-    vec3  l_normal = getNormalFromMap();
-    float l_metallic = texture(u_MetallicTexture, vs_texcoord).r * u_metallic;
-    float l_roughness = texture(u_RoughnessTexture, vs_texcoord).r * u_roughness;
-    float l_ao = texture(u_AOTexture, vs_texcoord).r;
+    vec3  l_albedo   ;
+    vec3  l_normal   ;
+    float l_metallic ;
+    float l_roughness;
+    float l_ao       ;
     
+    if(u_PBRToggle){
+         l_albedo    = pow(texture(u_AlbedoTexture, vs_texcoord).rgb, vec3(2.2));
+         l_normal    = getNormalFromMap();
+         l_metallic  = texture(u_MetallicTexture, vs_texcoord).r;
+         l_roughness = texture(u_RoughnessTexture, vs_texcoord).r;
+         l_ao        = texture(u_AOTexture, vs_texcoord).r;
+    } else {
+        l_albedo = vec3(.5, 0, 0);
+        l_normal = vs_normal;
+        l_metallic = u_metallic; 
+        l_roughness = u_roughness; 
+        l_ao = 0.; 
+    }
+
 
     colour = vec4(CalculatePBR(l_albedo, l_normal, l_metallic, l_roughness, l_ao), 1.f);
     

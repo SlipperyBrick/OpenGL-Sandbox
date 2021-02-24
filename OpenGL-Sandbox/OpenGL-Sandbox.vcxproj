@@ -163,6 +163,7 @@
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="PointLight.h" />
+    <ClInclude Include="Random.hpp" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="Texture.h" />
@@ -172,6 +173,7 @@
   <ItemGroup>
     <None Include="Shaders\EquirectangularToCubemapFrag.glsl" />
     <None Include="Shaders\EquirectangularToCubemapVert.glsl" />
+    <None Include="Shaders\FlatShadingFrag.glsl" />
     <None Include="Shaders\Frag.glsl" />
     <None Include="Shaders\IrradianceConvolutionFrag.glsl" />
     <None Include="Shaders\SkyboxFrag.glsl" />

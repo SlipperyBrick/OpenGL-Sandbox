@@ -22,8 +22,8 @@ public:
 
 	GLuint const getTextureID();
 	void Bind(const GLint textureUnit);
-	void BindCubemap(const GLint textureUnit);
 	void Unbind();
+
 	void loadFromFile(const char* filepath);
 
 	void LoadCubemap(const char* rightFace, const char* leftFace,
@@ -31,11 +31,19 @@ public:
 		             const char* backFace, const char* frontFace);
 
 	void LoadHDRI(const char* filepath);
+
 	void CreateCubemapFromHDRI(const char* filepath);
+	void CreateIrradianceTexture(Texture* Cubemap);
 
 private:
-	GLuint id;
+
+	GLuint m_id;
 	int m_width;
 	int m_height;
 	int m_components;
+	int m_textureType;
+	int sudfhsdhfsjkdf;
+
+	unsigned int m_captureFBO, m_captureRBO;
+
 };

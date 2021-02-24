@@ -29,6 +29,16 @@ unsigned int quadIndices[] = {
 	0, 2, 3
 };
 
+GLfloat triVert[] = {
+	  -1.0f,  0.f, 0.0f,   0.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+	  0.0f,   1.f, 0.0f,   0.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+	  1.0f,   0.f, 0.0f,   0.0f, 0.0f,  0.0f, 0.0f, 1.0f,
+};
+
+unsigned int triIndices[] = {
+	0, 1, 2
+};
+
 int main() {
 
 	Window window("Window", true, 1460, 768);
@@ -36,16 +46,20 @@ int main() {
 	Shader shader;
 	shader.CreateFromFile("Shaders/Vertex.glsl", "Shaders/Frag.glsl");
 
-	GuiLayer GuiLayer(window.GetWindow());
+	Shader flatShader;
+	flatShader.CreateFromFile("Shaders/Vertex.glsl", "Shaders/FlatShadingFrag.glsl");
 
-	glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
+	GuiLayer GuiLayer(window.GetWindow());
 
 	Texture hdriCubemap;
 	hdriCubemap.CreateCubemapFromHDRI("Textures/HDRIs/herkulessaulen_4k.hdr");
 	
+	Texture irradianceCubemap;
+	irradianceCubemap.CreateIrradianceTexture(&hdriCubemap);
+
 	Skybox skybox(&hdriCubemap);
-	
-	Camera camera(glm::vec3(0.f, 0.f, 10.f), glm::vec3(0, 1, 0), 0, 0, 1, 1, 90.f);
+
+	Camera camera(glm::vec3(0.f, 0.f, 10.f), glm::vec3(0, 1, 0), 0, 0, 5, 110, 90.f);
 
 	std::vector<PointLight> pointlights(4); {
 	   pointlights[0].SetPosition(glm::vec3(-10.0f,  10.0f, 10.0f));
@@ -59,20 +73,20 @@ int main() {
 	   pointlights[3].SetColour(glm::vec3(300.0f, 300.0f, 300.0f));
 	}
 
-	Texture Albedo   ("Textures/rustediron1-alt2-bl/rustediron2_basecolor.png");
-	Texture Normal   ("Textures/rustediron1-alt2-bl/rustediron2_normal.png");
-	Texture Roughness("Textures/rustediron1-alt2-bl/rustediron2_roughness.png");
-	Texture AO       ("Textures/rustediron1-alt2-bl/rustediron2_ao.png");
-	Texture Metallic ("Textures/rustediron1-alt2-bl/rustediron2_metallic.png");
+	Texture Albedo   ("Textures/PBR/Dirty Metal Sheet/Albedo_4K__vbsieik.jpg");
+	Texture Normal   ("Textures/PBR/Dirty Metal Sheet/Normal_4K__vbsieik.jpg");
+	Texture Roughness("Textures/PBR/Dirty Metal Sheet/Roughness_4K__vbsieik.jpg");
+	Texture AO       ("Textures/PBR/Dirty Metal Sheet/AO_4K__vbsieik.jpg");
+	Texture Metallic ("Textures/PBR/Dirty Metal Sheet/AO_4K__vbsieik.jpg");
 
 	Mesh obj;
 	obj.Create(quadVerts, quadIndices, 32, 6);
 
 	Model shpere;
-	shpere.Load("Models/shpere.fbx");
+	shpere.Load("Models/Sphere64.fbx");
 
-	int nrRows = 7;
-	int nrColumns = 7;
+	int nrRows = 5;
+	int nrColumns = 5;
 	float spacing = 2.5;
 
 	shader.Bind();
@@ -82,7 +96,7 @@ int main() {
 	Roughness.Bind(2);
 	AO.Bind(3);
 	Metallic.Bind(4);
-	//skyboxCubemap.BindCubemap(5);
+	irradianceCubemap.Bind(5);
 
 	shader.Set1i(0, "u_AlbedoTexture");
 	shader.Set1i(1, "u_NormalTexture");
@@ -112,11 +126,12 @@ int main() {
 	}
 	shader.Unbind();
 
+	bool useTexture = true;
 	while (window.IsOpen()) {
 
 		window.Update();
 		if (window.UpdateOnFocus()) {
-			camera.mouseControl(window.GetXChange(), window.GetYChange());
+			camera.mouseControl(window.GetXChange(), window.GetYChange(), window.GetDeltaTime());
 			camera.keyControl(window.GetsKeys(), window.GetDeltaTime());
 		}
 
@@ -128,24 +143,25 @@ int main() {
 
 			ImGui::Begin("GUI");
 			ImGui::Text("Application average %.2f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+			ImGui::Checkbox("Use PBR Textures", &useTexture);
 			ImGui::End();
 		} 
 
 		shader.Bind();
-
+		shader.Set1i(useTexture, "u_PBRToggle");
 		shader.SetVec3f(camera.GetCameraPosition(), "u_cameraPosition");
 		shader.SetMat4f(camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()), "u_Projection", false);
 		shader.SetMat4f(camera.CalculateViewMatrix(), "u_View", false);
-		
-		for (int row = 0; row < nrRows; row++) {
 
+		for (int row = 0; row < nrRows; row++) {
+		
 			shader.Set1f((float)row / (float)nrRows, "u_metallic");
 			for (int col = 0; col < nrColumns; col++) {
-
+		
 				// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
 				// on direct lighting.
 				shader.Set1f(glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f), "u_roughness");
-
+		
 				shpere.ResetModel();
 				shpere.SetRotate({ 90.f, 0.f, 0.f });
 				shpere.SetPosition(glm::vec3(
@@ -153,14 +169,12 @@ int main() {
 					(row - (nrRows / 2)) * spacing,
 					0.0f
 				));
-
 				shader.SetMat4f(shpere.GetModel(), "u_Model", false);
 				shpere.Render();
 			}
 		}
-	
+
 		shader.Unbind();
-		
 		
 		GuiLayer.End();
 		window.Clear();

@@ -2,7 +2,7 @@
 
 out vec4 colour;
 
-in vec3 vs_position;
+in vec3 vs_texcoord;
 
 uniform samplerCube u_environmentMap;
 
@@ -11,7 +11,7 @@ const float PI = 3.14159265359;
 void main()
 {		
     // the sample direction equals the hemisphere's orientation 
-    vec3 normal = normalize(vs_position);
+    vec3 normal = normalize(vs_texcoord);
   
     vec3 irradiance = vec3(0.0);
   

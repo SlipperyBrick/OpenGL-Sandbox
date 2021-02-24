@@ -51,7 +51,7 @@ Skybox::~Skybox()
 
 void Skybox::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 {
-	viewMatrix = glm::mat3(glm::mat4(viewMatrix));
+	//viewMatrix = glm::mat3(glm::mat4(viewMatrix));
 	//glDepthMask(GL_FALSE);
 
 	m_shader->Bind();
@@ -59,7 +59,7 @@ void Skybox::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 	m_shader->SetMat4f(viewMatrix, "u_viewMatrix", false);
 	m_shader->SetMat4f(projectionMatrix, "u_projectionMatrix", false);
 
-	m_cubemap->BindCubemap(0);
+	m_cubemap->Bind(0);
 
 	m_mesh->Render();
 
@@ -73,6 +73,7 @@ void Skybox::SetCubemap(Texture* cubemap)
 	this->m_cubemap = cubemap;
 }
 
+//TODO remove
 void Skybox::CreateCubemap(std::string imagePath[6])
 {
 
