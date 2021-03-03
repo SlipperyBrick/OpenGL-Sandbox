@@ -142,6 +142,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Camera.cpp" />
+    <ClCompile Include="DirectionalLight.cpp" />
     <ClCompile Include="Entity.cpp" />
     <ClCompile Include="GuiLayer.cpp" />
     <ClCompile Include="Light.cpp" />
@@ -150,6 +151,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="Shader.cpp" />
+    <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="Skybox.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Utility.cpp" />
@@ -157,6 +159,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h" />
+    <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="Entity.h" />
     <ClInclude Include="GuiLayer.h" />
     <ClInclude Include="Light.h" />
@@ -165,14 +168,21 @@
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="Random.hpp" />
     <ClInclude Include="Shader.h" />
+    <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="Skybox.h" />
     <ClInclude Include="Texture.h" />
+    <ClInclude Include="Timer.hpp" />
     <ClInclude Include="Utility.h" />
+    <ClInclude Include="Vertex.hpp" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Shaders\AnimationFrag.glsl" />
+    <None Include="Shaders\AnimationVert.glsl" />
     <None Include="Shaders\BRDFShaderFrag.glsl" />
     <None Include="Shaders\BRDFShaderVert.glsl" />
+    <None Include="Shaders\DirectionShadowMapFrag.glsl" />
+    <None Include="Shaders\DirectionShadowMapVert.glsl" />
     <None Include="Shaders\EquirectangularToCubemapFrag.glsl" />
     <None Include="Shaders\EquirectangularToCubemapVert.glsl" />
     <None Include="Shaders\FlatShadingFrag.glsl" />

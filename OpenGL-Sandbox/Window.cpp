@@ -17,8 +17,8 @@ Window::~Window()
 	glfwTerminate();
 }
 
-void Window::Update()
-{
+void Window::Update() {
+
 	glfwPollEvents();
 	glfwGetFramebufferSize(m_window, &m_bufferWidth, &m_bufferHeight);
 	glViewport(0, 0, m_bufferWidth, m_bufferHeight);
@@ -33,7 +33,7 @@ void Window::Update()
 void Window::Clear()
 {
 	glfwSwapBuffers(m_window);
-	glClearColor(0.f, 0.f, 0.f, 0.f);
+	glClearColor(0.f, 0.f, 0.f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 }
@@ -52,6 +52,11 @@ bool Window::IsFocused() {
 bool Window::UpdateOnFocus()
 {
 	return m_updateOnFocues;
+}
+
+void Window::SetViewport()
+{
+	glViewport(0, 0, m_width, m_height);
 }
 
 float Window::GetDeltaTime()

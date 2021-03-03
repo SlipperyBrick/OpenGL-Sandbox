@@ -20,6 +20,8 @@ public:
 	
 	void SetUpdateOnFocus(bool value) { this->m_updateOnFocues = value; };
 
+	void SetViewport();
+
 	float GetDeltaTime();
 	GLFWwindow* GetWindow() { return m_window; };
 	GLfloat GetBufferWidth();

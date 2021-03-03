@@ -20,9 +20,12 @@ Texture::Texture() {
 	m_captureFBO = NULL;
 	m_captureRBO = NULL;
 	m_components = NULL;
+	m_path = nullptr;
+	m_image2D = nullptr;
+	m_imageHDRI = nullptr;
 }
 
-Texture::Texture(const char* fileName)
+Texture::Texture(const char* path)
 {
 	m_id = NULL;
 	m_width = NULL;
@@ -31,7 +34,9 @@ Texture::Texture(const char* fileName)
 	m_captureFBO = NULL;
 	m_captureRBO = NULL;
 	m_components = NULL;
-	loadFromFile(fileName);
+	m_path = path;
+	m_image2D = nullptr;
+	m_imageHDRI = nullptr;
 }
 
 Texture::~Texture()
@@ -56,13 +61,26 @@ void Texture::Unbind()
 	glBindTexture(m_textureType, 0);
 }
 
-void Texture::loadFromFile(const char* fileName)
+void Texture::LoadImageData()
 {
+	m_image2D = SOIL_load_image(m_path, &this->m_width, &this->m_height, NULL, SOIL_LOAD_RGBA);
+}
 
-	unsigned char* image = SOIL_load_image(fileName, &this->m_width, &this->m_height, NULL, SOIL_LOAD_RGBA);
+void Texture::LoadHDRIData()
+{
+	stbi_set_flip_vertically_on_load(true);
+	m_imageHDRI = stbi_loadf(m_path, &this->m_width, &this->m_height, &this->m_components, NULL);
+}
 
-	if (!image) {
-		std::cout << "[ERROR]: Failed to load texture " << '"' << fileName << '"' << "\n";
+void Texture::CreateTexture2D()
+{
+	LoadImageData();
+	if (!m_image2D) {
+
+		if(!m_path)
+			std::cout << "[ERROR]: No image path to load \n";
+		else
+			std::cout << "[ERROR]: Failed to load texture " << '"' << m_path << '"' << "\n";
 	}
 	else {
 		glGenTextures(1, &m_id);
@@ -71,16 +89,17 @@ void Texture::loadFromFile(const char* fileName)
 	    //https://learnopengl.com/Getting-started/Textures
 	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	    
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image2D);
+
 	    glGenerateMipmap(GL_TEXTURE_2D);
-	    
-		glBindTexture(GL_TEXTURE_2D, NULL);
-		   
+	    glBindTexture(GL_TEXTURE_2D, NULL);
+		
+   
 	}
-	    SOIL_free_image_data(image);
+	    SOIL_free_image_data(m_image2D);
 }
 
 void Texture::LoadCubemap(const char* rightFace, const char* leftFace, 
@@ -124,22 +143,23 @@ void Texture::LoadCubemap(const char* rightFace, const char* leftFace,
 
 }
 
-void Texture::LoadHDRI(const char* filepath) { 
+void Texture::CreateHDRI() {
 
-	//pink_sunrise_4k.hdr
 	m_textureType = GL_TEXTURE_2D;
-	//unsigned char* image = SOIL_load_image(filepath, &this->m_width, &this->m_height, &temp, SOIL_LOAD_RGB);
-	stbi_set_flip_vertically_on_load(true);
-	float* image = stbi_loadf(filepath, &this->m_width, &this->m_height, &this->m_components, NULL);
+	
+	this->LoadHDRIData();
+	if (!m_imageHDRI) {
 
-	if (!image) {
-		std::cout << "[ERROR]: Failed to load HDRI " << '"' << filepath << '"' << "\n";
+		if (!m_path)
+			std::cout << "[ERROR]: No HDRI image path to load \n";
+		else
+			std::cout << "[ERROR]: Failed to load texture " << '"' << m_path << '"' << "\n";
 	}
 	else {
 
 		glGenTextures(1, &m_id);
 		glBindTexture(GL_TEXTURE_2D, m_id);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, m_width, m_height, 0, GL_RGB, GL_FLOAT, image);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, m_width, m_height, 0, GL_RGB, GL_FLOAT, m_imageHDRI);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -150,22 +170,18 @@ void Texture::LoadHDRI(const char* filepath) {
 		glBindTexture(GL_TEXTURE_2D, NULL);
 
 	}
-	stbi_image_free(image);
+	stbi_image_free(m_imageHDRI);
 
 }
 
-void Texture::CreateCubemapFromHDRI(const char* filepath) {
+void Texture::CreateCubemapFromHDRI(Texture HDRI) {
+
+	this->m_textureType = GL_TEXTURE_CUBE_MAP;
 
 	//Create Shader for converting;
 	Shader equirectangularToCubemapShader;
 	equirectangularToCubemapShader.CreateFromFile("Shaders/EquirectangularToCubemapVert.glsl", "Shaders/EquirectangularToCubemapFrag.glsl");
 	
-	//Load HDRI texture
-	Texture hdriTexture;
-	hdriTexture.LoadHDRI(filepath);
-
-	this->m_textureType = GL_TEXTURE_CUBE_MAP;
-
 	//create framebuffer and renderbuffer
 	glGenFramebuffers(1, &m_captureFBO);
 	glGenRenderbuffers(1, &m_captureRBO);
@@ -179,7 +195,7 @@ void Texture::CreateCubemapFromHDRI(const char* filepath) {
 	//create empty cubemap to place results into
 	glGenTextures(1, &this->m_id);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, this->m_id);
-	for (unsigned int i = 0; i < 6; ++i)
+	for (unsigned int i = 0; i < 6; i++)
 	{
 		// note that we store each face with 16 bit floating point values
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
@@ -192,7 +208,7 @@ void Texture::CreateCubemapFromHDRI(const char* filepath) {
 	//glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 	// convert HDR equirectangular environment map to cubemap equivalent
-	hdriTexture.Bind(0);
+	HDRI.Bind(0);
 	equirectangularToCubemapShader.Bind();
 	equirectangularToCubemapShader.Set1i(0, "u_equirectangularMap");
 	equirectangularToCubemapShader.SetMat4f(captureProjection, "u_projection", false);

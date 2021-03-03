@@ -2,25 +2,21 @@
 
 Light::Light()
 {
-	m_position = glm::vec3(0.f);
 	m_colour = glm::vec3(1.f);
-	m_intensity = 10.f;
+	m_intensity = 1.f;
 }
 
-Light::Light(glm::vec3 position, glm::vec3 colour, float intensity)
+Light::Light(float shadowWidth, float shadowHeight, glm::vec3 colour, float intensity)
 {
-	m_position = position;
+	m_shadowMap = new ShadowMap();
+	m_shadowMap->Init(shadowWidth, shadowHeight);
+
 	m_colour = colour;
 	m_intensity = intensity;
 }
 
 Light::~Light()
 {
-}
-
-void Light::SetPosition(glm::vec3 position)
-{
-	m_position = position;
 }
 
 void Light::SetColour(glm::vec3 colour)
@@ -31,16 +27,6 @@ void Light::SetColour(glm::vec3 colour)
 void Light::SetIntensity(float intensity)
 {
 	m_intensity = intensity;
-}
-
-glm::vec3 Light::GetPosition()
-{
-	return m_position;
-}
-
-glm::vec3* Light::GetPositionPtr()
-{
-	return &m_position;
 }
 
 glm::vec3* Light::GetColourPtr()

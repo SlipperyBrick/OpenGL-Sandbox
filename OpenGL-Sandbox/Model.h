@@ -21,6 +21,7 @@ public:
 	~Model();
 
 	void Load(const char* filepath);
+	void Create();
 	void Render();
 
 	void ResetModel();
@@ -39,5 +40,6 @@ private:
 	std::string GetFolderName(const aiScene* scene, const char* filepath);
 
 	std::vector<Mesh*> m_meshes;
-
+	std::vector<GLfloat> m_vertices;
+	std::vector<unsigned int> m_indices;
 };

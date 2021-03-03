@@ -11,6 +11,11 @@ PointLight::~PointLight()
 {
 }
 
+void PointLight::SetPosition(glm::vec3 position)
+{
+    m_position = position;
+}
+
 void PointLight::SetConstant(float constant)
 {
     m_constant = constant;
@@ -24,6 +29,11 @@ void PointLight::SetLinear(float linear)
 void PointLight::SetQuadratic(float exponent)
 {
     m_exponent = exponent;
+}
+
+glm::vec3 PointLight::GetPosition()
+{
+    return m_position;
 }
 
 float PointLight::GetConstant()

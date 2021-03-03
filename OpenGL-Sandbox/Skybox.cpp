@@ -41,7 +41,6 @@ Skybox::~Skybox()
 
 void Skybox::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 {
-
 	m_shader->Bind();
 
 	m_shader->SetMat4f(viewMatrix, "u_viewMatrix", false);
@@ -50,9 +49,6 @@ void Skybox::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 	m_cubemap->Bind(0);
 
 	m_mesh->Render();
-
-	m_shader->Unbind();
-
 
 }
 

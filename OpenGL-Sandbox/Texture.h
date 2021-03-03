@@ -12,27 +12,31 @@
 
 #include "Shader.h"
 #include "Utility.h"
+#include "Timer.hpp"
 
 class Texture
 {
 public:
 	Texture();
-	Texture(const char* fileName);
+	Texture(const char* path);
 	~Texture();
 
 	GLuint const GetTextureID();
 	void Bind(const GLint textureUnit);
 	void Unbind();
 
-	void loadFromFile(const char* filepath);
+	void LoadImageData();
+	void LoadHDRIData();
+
+	void CreateTexture2D();
 
 	void LoadCubemap(const char* rightFace, const char* leftFace,
 		             const char* topFace, const char* bottomFace,
 		             const char* backFace, const char* frontFace);
 
-	void LoadHDRI(const char* filepath);
+	void CreateHDRI();
 
-	void CreateCubemapFromHDRI(const char* filepath);
+	void CreateCubemapFromHDRI(Texture HDRI);
 	void CreateIrradianceTexture(Texture* Cubemap);
 	void CreatePrefilterMap(Texture* environmentMap);
 	void CreateBRDFLookUpTable();
@@ -44,7 +48,9 @@ private:
 	int m_height;
 	int m_components;
 	int m_textureType;
-
+	const char* m_path;
+	unsigned char* m_image2D;
+	float* m_imageHDRI;
 	unsigned int m_captureFBO, m_captureRBO;
 
 };

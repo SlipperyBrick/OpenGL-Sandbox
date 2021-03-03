@@ -1,42 +1,107 @@
-#version 450 core                                  
+#version 450 core                             
 
 const float PI = 3.14159265359;
   
-struct PointLight{
+struct PointLight {
     vec3 m_position;
-    vec3 m_colour;
-    float m_intensity;
-    float m_constant;
-    float m_linear;
-    float m_quadratic;
+    vec4 m_colour;
+};
+
+struct DirectionLight {
+    vec4 m_colour;
+    vec3 m_direction;
 };
 
 out vec4 colour;                               
 
 in vec3 vs_position;
 in vec2 vs_texcoord;
-in vec3 vs_normal;      
+in vec3 vs_normal;    
+in vec4 vs_directionLightPosition;
 
 uniform vec3 u_cameraPosition;
 
+//lights
 uniform PointLight pointLight[4];
+uniform DirectionLight DirLight;
 
+//pbr textures
 uniform sampler2D u_AlbedoTexture;
 uniform sampler2D u_NormalTexture;
 uniform sampler2D u_RoughnessTexture;
 uniform sampler2D u_AOTexture;
 uniform sampler2D u_MetallicTexture;
 
+//skybox textures
 uniform samplerCube u_irradianceMap;
 uniform samplerCube u_prefilterMap;
 uniform sampler2D   u_brdfLUT;
+
+uniform sampler2D u_directionalShadowMap;
+
+uniform bool u_usePRB;
 
 //vec3  u_albedo;
 uniform float u_metallic;  
 uniform float u_roughness;
 //uniform float u_ao;
 
-uniform bool u_PBRToggle;
+float CalcDirectionalShadowFactor(DirectionLight light) {
+
+	float shadow = 0.0;
+	vec3 projCoords = vs_directionLightPosition.xyz / vs_directionLightPosition.w;
+	projCoords = (projCoords * 0.5) + 0.5;
+	
+    if(projCoords.z > 1.0){
+        shadow = 0.0;
+        return shadow;
+    }
+
+	vec3 normal = normalize(vs_normal);
+	vec3 lightDir = normalize(light.m_direction);
+	
+	float currentDepth  = projCoords.z;
+    float closestDepth  = texture(u_directionalShadowMap, projCoords.xy).r;
+	
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);  
+
+    vec2 texelSize = 1.0 / textureSize(u_directionalShadowMap, 0);
+    for(int x = -1; x <= 1; ++x)
+    {
+        for(int y = -1; y <= 1; ++y)
+        {
+            float pcfDepth = texture(u_directionalShadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
+            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+        }    
+    }
+    
+    shadow /= 9.0; 
+
+
+
+	return shadow;
+}
+
+vec3 CalcDirLight(DirectionLight light, vec3 normal) {
+   
+    vec3 lightDir = normalize(-light.m_direction);
+    vec3 viewDir = (u_cameraPosition - vs_position);
+    lightDir += + 0.1;
+    // diffuse shading
+    float diff = max(dot(normal, lightDir), 0.0);
+
+    // specular shading
+    vec3 reflectDir = reflect(-lightDir, normal);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.f);
+
+    // combine results
+    vec3 ambient  = light.m_colour.rgb * light.m_colour.w  ;
+    vec3 diffuse  = light.m_colour.rgb * light.m_colour.w  ;
+    vec3 specular = light.m_colour.rgb * light.m_colour.w  ;
+
+    return (1.f - CalcDirectionalShadowFactor(DirLight)) * (ambient + diffuse + specular) ;  
+
+} 
 
 vec3 getNormalFromMap() {
 
@@ -112,14 +177,14 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
-    for(int i = 0; i < 4; i++) 
-    {
+    for(int i = 0; i < 4; i++)  {
+
         // calculate per-light radiance
         vec3 L = normalize(pointLight[i].m_position - vs_position);
         vec3 H = normalize(V + L);
         float distance = length(pointLight[i].m_position - vs_position);
         float attenuation = 1.0 / (distance * distance);
-        vec3 radiance = pointLight[i].m_colour * attenuation;
+        vec3 radiance = pointLight[i].m_colour.rgb * pointLight[i].m_colour.w * attenuation;
 
         // Cook-Torrance BRDF
         float NDF = DistributionGGX(N, H, roughness);   
@@ -187,21 +252,21 @@ void main() {
     float l_roughness;
     float l_ao       ;
     
-    if(u_PBRToggle){
-         l_albedo    = pow(texture(u_AlbedoTexture, vs_texcoord).rgb, vec3(2.2));
-         l_normal    = getNormalFromMap();
-         l_metallic  = texture(u_MetallicTexture, vs_texcoord).r;
-         l_roughness = texture(u_RoughnessTexture, vs_texcoord).r;
-         l_ao        = texture(u_AOTexture, vs_texcoord).r;
+    if(u_usePRB) {
+        l_albedo    = pow(texture(u_AlbedoTexture, vs_texcoord).rgb, vec3(2.2));
+        l_normal    = getNormalFromMap();
+        l_metallic  = texture(u_MetallicTexture, vs_texcoord).r;
+        l_roughness = texture(u_RoughnessTexture, vs_texcoord).r;
+        l_ao        = texture(u_AOTexture, vs_texcoord).r;
     } else {
-        l_albedo = vec3(.5, 0, 0);//texture(u_brdfLUT, vs_texcoord).rgb; 
-        l_normal = vs_normal;
-        l_metallic = u_metallic; 
-        l_roughness = u_roughness; 
-        l_ao = 1.; 
+        l_albedo    = vec3(0.5, 0.f, 0.f);
+        l_normal    = vs_normal;
+        l_metallic  = 0.f;
+        l_roughness = 10.f;
+        l_ao        = 1.f;
     }
-
-
-    colour = vec4(CalculatePBR(l_albedo, l_normal, l_metallic, l_roughness, l_ao), 1.f);
+         
+       colour = vec4(CalculatePBR(l_albedo, normalize(l_normal), l_metallic, l_roughness, l_ao), 1.f)
+       + vec4(CalcDirLight(DirLight, normalize(l_normal)), 1.f);
     
 }
