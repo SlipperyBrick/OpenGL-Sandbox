@@ -63,6 +63,12 @@
     <ClCompile Include="ShadowMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="OmniShadowMap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SpotLight.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -116,6 +122,12 @@
     <ClInclude Include="ShadowMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="OmniShadowMap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SpotLight.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Frag.glsl">
@@ -161,6 +173,15 @@
       <Filter>Resource Files\Shaders</Filter>
     </None>
     <None Include="Shaders\DirectionShadowMapVert.glsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\OmniShadowMapShaderVert.glsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\OmniShadowMapShaderFrag.glsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\OmniShadowMapShaderGeom.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
   </ItemGroup>

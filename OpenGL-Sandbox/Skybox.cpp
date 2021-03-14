@@ -49,7 +49,6 @@ void Skybox::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
 	m_cubemap->Bind(0);
 
 	m_mesh->Render();
-
 }
 
 void Skybox::SetCubemap(Texture* cubemap)

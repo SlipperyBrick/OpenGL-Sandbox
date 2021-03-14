@@ -17,6 +17,15 @@ void Shader::CreateFromString(const char* vertexShader, const char* fragmentShad
 	CompileShader(vertexShader, fragmentShader);
 }
 
+void Shader::CreateFromFile(const char* vertexPath, const char* geometryPath, const char* fragmentPath)
+{
+	std::string vertexStr = ReadFile(vertexPath);
+	std::string geometryStr = ReadFile(geometryPath);
+	std::string fragmentStr = ReadFile(fragmentPath);
+
+	CompileShader(vertexStr.c_str(), geometryStr.c_str(), fragmentStr.c_str());
+}
+
 void Shader::CreateFromFile(const char* vertexPath, const char* fragmentPath)
 {
 	std::string vertexStr = ReadFile(vertexPath);
@@ -120,8 +129,23 @@ void Shader::SetMat4f(glm::mat4 value, const char* uniformName, bool transpose)
 	glUniformMatrix4fv(glGetUniformLocation(shaderID, uniformName), 1, transpose, glm::value_ptr(value));
 }
 
-void Shader::QueryWorkgroups()
+void Shader::Validate()
 {
+	GLint result = 0;
+	GLchar eLog[1024] = { 0 };
+
+	glValidateProgram(shaderID);
+	glGetProgramiv(shaderID, GL_VALIDATE_STATUS, &result);
+	if (!result)
+	{
+		glGetProgramInfoLog(shaderID, sizeof(eLog), NULL, eLog);
+		printf("Error validating program: '%s'\n", eLog);
+		return;
+	}
+}
+
+void Shader::QueryWorkgroups() {
+
 	int work_grp_size[3], work_grp_inv;
 	// maximum global work group (total work in a dispatch)
 	glGetIntegeri_v(GL_MAX_COMPUTE_WORK_GROUP_COUNT, 0, &work_grp_size[0]);
@@ -174,6 +198,42 @@ void Shader::CompileShader(const char* vertexShader, const char* fragmentShader)
 
 }
 
+void Shader::CompileShader(const char* vertexShader, const char* geometryShader, const char* fragmentShader)
+{
+	shaderID = glCreateProgram();
+
+	AddShader(shaderID, vertexShader, GL_VERTEX_SHADER);
+	AddShader(shaderID, geometryShader, GL_GEOMETRY_SHADER);
+	AddShader(shaderID, fragmentShader, GL_FRAGMENT_SHADER);
+
+	GLint result = 0;
+	GLchar errorLog[1024] = { 0 };
+
+	glLinkProgram(shaderID);
+	glGetProgramiv(shaderID, GL_LINK_STATUS, &result);
+	if (!result) {
+		glGetProgramInfoLog(shaderID, sizeof(errorLog), NULL, errorLog);
+		printf("[ERROR]: Linking program failed: '%s'\n", errorLog);
+		return;
+	}
+
+	glValidateProgram(shaderID);
+	glGetProgramiv(shaderID, GL_VALIDATE_STATUS, &result);
+	if (!result) {
+		glGetProgramInfoLog(shaderID, sizeof(errorLog), NULL, errorLog);
+		printf("[ERROR]: Validating program failed: '%s'\n", errorLog);
+		return;
+	}
+
+	if (!shaderID) {
+		printf("[ERROR]: shader wasn't complied..\n");
+		return;
+	}
+
+	u_Model = glGetUniformLocation(shaderID, "u_Model");
+	u_Projection = glGetUniformLocation(shaderID, "u_Projection");
+}
+
 void Shader::CompileShader(const char* computeShader)
 {
 	
@@ -209,11 +269,12 @@ void Shader::CompileShader(const char* computeShader)
 
 void Shader::AddShader(GLuint program, const char* shaderCode, GLenum type)
 {
+	//TODO rewirte func
 	GLuint shader = glCreateShader(type);
-	const char* programCode[1];
+	const char* programCode[1]; //???
 	programCode[0] = shaderCode;
 
-	GLint codeLength[1];
+	GLint codeLength[1]; //???
 	codeLength[0] = strlen(shaderCode);
 
 	glShaderSource(shader, 1, (const GLchar* const*)programCode, codeLength);

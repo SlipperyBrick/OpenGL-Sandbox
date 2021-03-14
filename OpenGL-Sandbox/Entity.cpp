@@ -13,7 +13,7 @@ Entity::~Entity()
 
 }
 
-void Entity::SetTranslate(glm::vec3 translate)
+void Entity::SetTranslation(glm::vec3 translate)
 {
 	m_translate = translate;
 }
@@ -28,7 +28,7 @@ void Entity::SetScale(glm::vec3 scale)
 	m_scale = scale;
 }
 
-glm::vec3 Entity::GetTranslate()
+glm::vec3 Entity::GetTranslation()
 {
 	return m_translate;
 }
@@ -43,10 +43,20 @@ glm::vec3 Entity::GetScale()
 	return m_scale;
 }
 
+void Entity::SetModel(glm::mat4* model)
+{
+	m_model = *model;
+}
+
 glm::mat4 Entity::GetModel()
 {
 	this->UpdateModel();
 	return m_model;
+}
+
+glm::mat4* Entity::GetModelPtr()
+{
+	return &m_model;
 }
 
 void Entity::UpdateModel()

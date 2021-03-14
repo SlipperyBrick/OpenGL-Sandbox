@@ -16,6 +16,7 @@ public:
 	~Shader();
 
 	void CreateFromString(const char* vertexShader, const char* fragmentShader);
+	void CreateFromFile(const char* vertexPath, const char* geometryShader, const char* fragmentPath);
 	void CreateFromFile(const char* vertexPath, const char* fragmentPath);
 	void CreateFromFile(const char* computePath);
 
@@ -38,6 +39,7 @@ public:
 	void SetVec4f(glm::vec4 value, const GLchar* name);
 	void SetMat4f(glm::mat4 value, const char* uniformName, bool transpose);
 
+	void Validate();
 	void QueryWorkgroups();
 
 private:
@@ -46,6 +48,7 @@ private:
 	GLuint u_Projection, u_Model;
 
 	void CompileShader(const char* vertexShader, const char* fragmentShader);
+	void CompileShader(const char* vertexShader, const char* geometryShader, const char* fragmentShader);
 	void CompileShader(const char* computeShader);
 	void AddShader(GLuint program, const char* shaderCode, GLenum type);
 

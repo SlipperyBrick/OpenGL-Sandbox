@@ -5,12 +5,12 @@ Mesh::Mesh()
 	VAO = 0;
 	VBO = 0;
 	IBO = 0;
-	indexCount = 0;
+	m_indexCount = 0;
 }
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
 {
-	CreateAnimatedMesh(vertices, indices);
+	Create(vertices, indices);
 }
 
 Mesh::~Mesh()
@@ -18,16 +18,16 @@ Mesh::~Mesh()
 	Clear();
 }
 
-void Mesh::Create(GLfloat* vertices, unsigned int* indices, unsigned int vertexCount, unsigned int indicesCount)
+void Mesh::Create(GLfloat* vertices, unsigned int* indices, unsigned int vertexCount, unsigned int indicesCount) 
 {
-	indexCount = indicesCount;
+	m_indexCount = indicesCount;
 
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
 
 	glGenBuffers(1, &IBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * indexCount, &indices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices[0]) * m_indexCount, &indices[0], GL_STATIC_DRAW);
 
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
@@ -48,9 +48,9 @@ void Mesh::Create(GLfloat* vertices, unsigned int* indices, unsigned int vertexC
 
 }
 
-void Mesh::CreateAnimatedMesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices) {
-
-	indexCount = indices.size();
+void Mesh::Create(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
+{
+	m_indexCount = indices.size();
 
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -62,7 +62,7 @@ void Mesh::CreateAnimatedMesh(std::vector<Vertex> vertices, std::vector<unsigned
 	glGenBuffers(1, &VBO);
 	glBindBuffer(GL_ARRAY_BUFFER, VBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(Vertex) * vertices.size(), &vertices[0], GL_STATIC_DRAW);
- 
+
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_position));
 
@@ -73,15 +73,15 @@ void Mesh::CreateAnimatedMesh(std::vector<Vertex> vertices, std::vector<unsigned
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_normal));
 
 	glEnableVertexAttribArray(3);
-	glVertexAttribIPointer(3, 4, GL_INT,            sizeof(Vertex), (void*)offsetof(Vertex, m_boneIDs));
+	glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_tangent));
 
 	glEnableVertexAttribArray(4);
-	glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_weights));
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_bitangent));
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
 	glBindVertexArray(0);
+
 }
 
 void Mesh::Render() {
@@ -89,7 +89,7 @@ void Mesh::Render() {
 	glBindVertexArray(VAO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 	
-	glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+	glDrawElements(GL_TRIANGLES, m_indexCount, GL_UNSIGNED_INT, 0);
 
 }
 
@@ -110,5 +110,5 @@ void Mesh::Clear() {
 		VAO = 0;
 	}
 
-	indexCount = 0;
+	m_indexCount = 0;
 }

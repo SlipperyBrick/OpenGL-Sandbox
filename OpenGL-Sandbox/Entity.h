@@ -9,15 +9,18 @@ public:
 	Entity();
 	~Entity();
 
-	void SetTranslate(glm::vec3 translate);
+	void SetTranslation(glm::vec3 translate);
 	void SetRotation(glm::vec3 rotation);
 	void SetScale(glm::vec3 scale);
 
-	glm::vec3 GetTranslate();
+	glm::vec3 GetTranslation();
 	glm::vec3 GetRotation ();
 	glm::vec3 GetScale    ();
 
+	void SetModel(glm::mat4* model);
 	glm::mat4 GetModel();
+	glm::mat4* GetModelPtr();
+	
 	void UpdateModel();
 	void ResetModel();
 

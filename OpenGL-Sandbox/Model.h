@@ -14,7 +14,7 @@
 #include "Texture.h"
 
 
-class Model
+class Model : public Entity
 {
 public:
 	Model();
@@ -25,11 +25,7 @@ public:
 	void Render();
 
 	void ResetModel();
-	glm::mat4 GetModel();
-
-	void SetPosition(const glm::vec3 position);
-	void SetRotate(const glm::vec3 rotation);
-	void SetScale(const glm::vec3 scale);
+	glm::mat4 GetModelMatrix();
 
 private:
 
@@ -40,6 +36,6 @@ private:
 	std::string GetFolderName(const aiScene* scene, const char* filepath);
 
 	std::vector<Mesh*> m_meshes;
-	std::vector<GLfloat> m_vertices;
+	std::vector<Vertex> m_vertices;
 	std::vector<unsigned int> m_indices;
 };

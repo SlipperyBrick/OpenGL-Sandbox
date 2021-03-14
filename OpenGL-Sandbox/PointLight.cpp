@@ -2,13 +2,53 @@
 
 PointLight::PointLight()
 {
+    m_position = glm::vec3(0.f);
     m_constant = 1.f;
     m_linear = 1.f;
     m_exponent = 1.f;
+    m_farPlane = 50;
+}
+
+PointLight::PointLight(glm::vec4 colour, glm::vec3 position, float shadowWidth, float shadowHeight, float nearPlane, float farPlane)
+    :Light(shadowWidth, shadowHeight, glm::vec3(colour.x, colour.y, colour.z), colour.w)
+{
+    m_position = position;
+    m_farPlane = farPlane;
+
+    m_constant = 1.f;
+    m_linear = 1.f;
+    m_exponent = 1.f;
+
+    float aspectRatio = ((float)shadowWidth / (float)shadowHeight);
+    m_projection = glm::perspective(glm::radians(90.f), aspectRatio, nearPlane, farPlane);
+
+    m_shadowMap = new OmniShadowMap();
+    m_shadowMap->Init(shadowWidth, shadowHeight);
+
 }
 
 PointLight::~PointLight()
 {
+}
+
+std::vector<glm::mat4> PointLight::CalculateLightTransform()
+{
+    std::vector<glm::mat4> lightTransforms;
+
+    //pos x
+    lightTransforms.push_back(m_projection * glm::lookAt(m_position, m_position + glm::vec3(1, 0, 0) , glm::vec3(0, -1, 0)));
+    //neg x
+    lightTransforms.push_back(m_projection * glm::lookAt(m_position, m_position + glm::vec3(-1, 0, 0), glm::vec3(0, -1, 0)));
+    //pos y
+    lightTransforms.push_back(m_projection * glm::lookAt(m_position, m_position + glm::vec3(0, 1, 0) , glm::vec3(0, 0, 1)));
+    //neg y
+    lightTransforms.push_back(m_projection * glm::lookAt(m_position, m_position + glm::vec3(0, -1, 0), glm::vec3(0, 0, -1)));
+    //pos z
+    lightTransforms.push_back(m_projection * glm::lookAt(m_position, m_position + glm::vec3(0, 0, 1), glm::vec3(0, -1, 0)));
+    //neg z
+    lightTransforms.push_back(m_projection * glm::lookAt(m_position, m_position + glm::vec3(0, 0, -1), glm::vec3(0, -1, 0)));
+
+    return lightTransforms;
 }
 
 void PointLight::SetPosition(glm::vec3 position)
@@ -34,6 +74,11 @@ void PointLight::SetQuadratic(float exponent)
 glm::vec3 PointLight::GetPosition()
 {
     return m_position;
+}
+
+glm::vec3* PointLight::GetPositionPtr()
+{
+    return &m_position;
 }
 
 float PointLight::GetConstant()
@@ -64,22 +109,4 @@ float* PointLight::GetLinearPtr()
 float* PointLight::GetQuadraticPtr()
 {
     return &m_exponent;
-}
-
-void PointLight::SetUniforms(Shader* shader)
-{
-    /*
-     vec3 m_position;
-     vec3 m_colour;
-     float m_intensity;
-     float m_constant;
-     float m_linear;
-     float m_quadratic;
-    */
-    shader->SetVec3f(this->GetPosition(), "pointLight.m_position");
-    shader->SetVec3f(this->GetColour(), "pointLight.m_colour");
-    shader->Set1f(this->GetIntensity(), "pointLight.m_intensity");
-    shader->Set1f(this->GetConstant(), "pointLight.m_constant");
-    shader->Set1f(this->GetLinear(), "pointLight.m_linear");
-    shader->Set1f(this->GetQuadratic(), "pointLight.m_quadratic");
 }

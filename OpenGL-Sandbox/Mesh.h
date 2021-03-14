@@ -11,11 +11,9 @@ public:
 	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 	~Mesh();
 
-	//Static mesh
+	
 	void Create(GLfloat* vertices, unsigned int *indices, unsigned int vertexCount, unsigned int indicesCount);
-
-	//Non-Static Mesh
-	void CreateAnimatedMesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
+	void Create(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 
 	void Render();
 	void Clear();
@@ -23,7 +21,7 @@ public:
 private:
 
 	GLuint VAO, VBO, IBO;
-	GLsizei indexCount;
+	GLsizei m_indexCount;
 
 };
 

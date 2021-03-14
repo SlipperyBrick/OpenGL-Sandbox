@@ -149,10 +149,12 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="OmniShadowMap.cpp" />
     <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="Skybox.cpp" />
+    <ClCompile Include="SpotLight.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="Window.cpp" />
@@ -165,11 +167,13 @@
     <ClInclude Include="Light.h" />
     <ClInclude Include="Mesh.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="OmniShadowMap.h" />
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="Random.hpp" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="Skybox.h" />
+    <ClInclude Include="SpotLight.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Timer.hpp" />
     <ClInclude Include="Utility.h" />
@@ -188,6 +192,9 @@
     <None Include="Shaders\FlatShadingFrag.glsl" />
     <None Include="Shaders\Frag.glsl" />
     <None Include="Shaders\IrradianceConvolutionFrag.glsl" />
+    <None Include="Shaders\OmniShadowMapShaderFrag.glsl" />
+    <None Include="Shaders\OmniShadowMapShaderGeom.glsl" />
+    <None Include="Shaders\OmniShadowMapShaderVert.glsl" />
     <None Include="Shaders\PrefilterFrag.glsl" />
     <None Include="Shaders\SkyboxFrag.glsl" />
     <None Include="Shaders\SkyboxVert.glsl" />

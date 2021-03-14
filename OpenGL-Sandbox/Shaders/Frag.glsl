@@ -1,10 +1,24 @@
 #version 450 core                             
 
 const float PI = 3.14159265359;
-  
+const int MAX_POINT_LIGHTS = 1;
+const int MAX_SPOT_LIGHTS = 1;
+
 struct PointLight {
+
     vec3 m_position;
     vec4 m_colour;
+
+    float m_constant;
+    float m_linear;
+    float m_quadratic;
+};
+
+struct SpotLight {
+    PointLight base;
+    vec3 m_direction;
+    float m_outterEdge;
+    float m_innerEdge;
 };
 
 struct DirectionLight {
@@ -12,18 +26,24 @@ struct DirectionLight {
     vec3 m_direction;
 };
 
+struct OmniShadowMap {
+    samplerCube m_shadowMap;
+    float m_farPlane;
+};
+
 out vec4 colour;                               
 
 in vec3 vs_position;
 in vec2 vs_texcoord;
-in vec3 vs_normal;    
-in vec4 vs_directionLightPosition;
+in vec3 vs_normal;            
 
-uniform vec3 u_cameraPosition;
+in vec4 vs_directionLightPosition;
+in vec3 vs_cameraPosition;
 
 //lights
 uniform PointLight pointLight[4];
 uniform DirectionLight DirLight;
+uniform SpotLight spotlight;
 
 //pbr textures
 uniform sampler2D u_AlbedoTexture;
@@ -31,79 +51,174 @@ uniform sampler2D u_NormalTexture;
 uniform sampler2D u_RoughnessTexture;
 uniform sampler2D u_AOTexture;
 uniform sampler2D u_MetallicTexture;
+uniform sampler2D u_DisplacementTexture;
+
+//shadow maps
+uniform sampler2D u_directionalShadowMap;
+
+uniform samplerCube u_omniShadowMap;
+uniform float u_omniFarPlane;
+
+uniform samplerCube u_SpotLightShadowMap;
+uniform float u_SpotLightFarPlane;
 
 //skybox textures
 uniform samplerCube u_irradianceMap;
 uniform samplerCube u_prefilterMap;
 uniform sampler2D   u_brdfLUT;
 
-uniform sampler2D u_directionalShadowMap;
-
 uniform bool u_usePRB;
-
-//vec3  u_albedo;
+uniform bool u_test;
 uniform float u_metallic;  
 uniform float u_roughness;
-//uniform float u_ao;
+uniform float u_ao;
+uniform float u_heightScale;
+uniform int u_FilterLevel;
 
-float CalcDirectionalShadowFactor(DirectionLight light) {
+vec3 sampleOffsetDirections[20] = vec3[] (
+   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+); 
 
-	float shadow = 0.0;
-	vec3 projCoords = vs_directionLightPosition.xyz / vs_directionLightPosition.w;
-	projCoords = (projCoords * 0.5) + 0.5;
-	
-    if(projCoords.z > 1.0){
-        shadow = 0.0;
-        return shadow;
+float CalcOmniShadowFactor(PointLight light, int index) {
+
+    vec3 lightDir = vs_position - light.m_position;
+    float currDpeth = length(lightDir);
+
+    float shadow = 0.f;
+    float bias = 0.05;
+    int samples = 10;
+
+    float viewDirection = length(vs_cameraPosition - vs_position);
+    float radius = (1.f + (viewDirection/u_omniFarPlane)) / 25.f;
+
+    for(int i = 0; i < samples; i++) {
+        float closestDepth = texture(u_omniShadowMap, lightDir + sampleOffsetDirections[i] * radius).r;
+        closestDepth *= u_omniFarPlane;
+        if(currDpeth - bias > closestDepth) {
+            shadow += 1.f;
+        }
+
     }
 
-	vec3 normal = normalize(vs_normal);
-	vec3 lightDir = normalize(light.m_direction);
+    shadow /= float(samples);
+    return shadow;
+}
+
+float CalcOmniShadowFactor(SpotLight light, int index) {
+
+    vec3 lightDir = vs_position - light.base.m_position;
+    float currDpeth = length(lightDir);
+
+    float shadow = 0.f;
+    float bias = 0.05;
+    int samples = 25;
+
+    float viewDirection = length(vs_cameraPosition - vs_position);
+    float radius = (1 + (viewDirection/u_SpotLightFarPlane)) / 25.f;
+
+    for(int i = 0; i < samples; i++) {
+        float closestDepth = texture(u_SpotLightShadowMap, lightDir + sampleOffsetDirections[i] * radius).r;
+        closestDepth *= u_SpotLightFarPlane;
+        if(currDpeth - bias > closestDepth) {
+            shadow += 1.0f;
+        }
+
+    }
+
+    shadow /= float(samples);
+    return shadow;
+}
+
+
+vec3 CalcSpotLight(SpotLight light, int index, vec3 albedo, vec3 normal, float metallic, float roughness, float ao) {
+    
+    vec3 lightDir = normalize(-light.base.m_position - vs_position);
+    float theta = dot(lightDir, normalize(light.m_direction));
+    float epsilon = light.m_innerEdge - light.m_outterEdge;
+    float hardness = clamp((theta -  light.m_innerEdge) / epsilon, 0.0, 1.0);
+
+    float distance = length(light.base.m_position - vs_position);
+    float attenuation = 1.0 / (distance * distance);
+    
+    // ambient
+    vec3 ambient = light.base.m_colour.rgb * (albedo*ao);
+    
+    // diffuse 
+    float diff = max(dot(normal, lightDir), 0.0);
+    vec3 diffuse = light.base.m_colour.rgb  * diff * albedo;  
+
+    // specular
+    vec3 viewDir = normalize(vs_cameraPosition - vs_position);
+    vec3 reflectDir = reflect(lightDir, normal);  
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), metallic);
+    vec3 specular = light.base.m_colour.rgb * spec * roughness; 
+
+    float shadowFactor = CalcOmniShadowFactor(light, 0);
+
+    if(theta > light.m_innerEdge) 
+    {   
+        return (1 - shadowFactor) * (diffuse + specular) * (light.base.m_colour.rgb * light.base.m_colour.w)  * hardness * attenuation;
+    }
+
+}
+
+float CalcDirectionalShadowFactor(DirectionLight light, vec3 normal) {
+
+	vec3 projCoords = vs_directionLightPosition.xyz / vs_directionLightPosition.w;
+	projCoords = projCoords * 0.5 + 0.5;
 	
-	float currentDepth  = projCoords.z;
-    float closestDepth  = texture(u_directionalShadowMap, projCoords.xy).r;
-	
+    if(projCoords.z > 1.0) {
+        return 0.f;
+    }
+
+	vec3 lightDir = normalize(-light.m_direction);
     float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);  
 
+	float shadow = 0.0;
+
+    // PCF: percentage-closer filtering
     vec2 texelSize = 1.0 / textureSize(u_directionalShadowMap, 0);
-    for(int x = -1; x <= 1; ++x)
+    int FilterLevel = u_FilterLevel;
+    for(int i = -FilterLevel; i <= FilterLevel; i++)
     {
-        for(int y = -1; y <= 1; ++y)
+        for(int j = -FilterLevel; j <= FilterLevel; j++)
         {
-            float pcfDepth = texture(u_directionalShadowMap, projCoords.xy + vec2(x, y) * texelSize).r; 
-            shadow += currentDepth - bias > pcfDepth ? 1.0 : 0.0;        
+            float pcfDepth = texture(u_directionalShadowMap, projCoords.xy + vec2(i, j) * texelSize).r; 
+            shadow += projCoords.z - bias > pcfDepth ? 1.0 : 0.0;        
         }    
     }
     
-    shadow /= 9.0; 
-
-
+    shadow /= ((FilterLevel*2+1)*(FilterLevel*2+1)); 
 
 	return shadow;
 }
 
-vec3 CalcDirLight(DirectionLight light, vec3 normal) {
-   
-    vec3 lightDir = normalize(-light.m_direction);
-    vec3 viewDir = (u_cameraPosition - vs_position);
-    lightDir += + 0.1;
+vec3 CalcDirLight(DirectionLight light, vec3 albedo, vec3 normal, float metallic) {
+ 
+    vec3 lightDir = normalize(light.m_direction);
+    vec3 viewDir = (vs_cameraPosition - vs_position);
+
     // diffuse shading
     float diff = max(dot(normal, lightDir), 0.0);
 
     // specular shading
-    vec3 reflectDir = reflect(-lightDir, normal);
+    vec3 reflectDir = reflect(lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.f);
 
     // combine results
-    vec3 ambient  = light.m_colour.rgb * light.m_colour.w  ;
-    vec3 diffuse  = light.m_colour.rgb * light.m_colour.w  ;
-    vec3 specular = light.m_colour.rgb * light.m_colour.w  ;
+    vec3 ambient  = light.m_colour.rgb * light.m_colour.w * albedo;
+    vec3 diffuse  = light.m_colour.rgb * light.m_colour.w * diff * albedo;
+    vec3 specular = light.m_colour.rgb * light.m_colour.w * spec  * metallic;
 
-    return (1.f - CalcDirectionalShadowFactor(DirLight)) * (ambient + diffuse + specular) ;  
+    return  ((1.0 - CalcDirectionalShadowFactor(DirLight, normal)) * (diffuse + specular));
 
 } 
 
-vec3 getNormalFromMap() {
+vec3 GetNormalFromMap() {
 
     vec3 tangentNormal = texture(u_NormalTexture, vs_texcoord).xyz * 2.0 - 1.0;
 
@@ -166,7 +281,7 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
 vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, float ao) {
 
     vec3 N = normal;
-    vec3 V = normalize(u_cameraPosition - vs_position);
+    vec3 V = normalize(vs_cameraPosition - vs_position);
     vec3 R = reflect(-V, N); 
 
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 
@@ -174,10 +289,9 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
     vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
 
-
     // reflectance equation
     vec3 Lo = vec3(0.0);
-    for(int i = 0; i < 4; i++)  {
+    for(int i = 0; i < MAX_POINT_LIGHTS; i++)  {
 
         // calculate per-light radiance
         vec3 L = normalize(pointLight[i].m_position - vs_position);
@@ -207,10 +321,10 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
         kD *= 1.0 - metallic;	                
             
         // scale light by NdotL
-        float NdotL = max(dot(N, L), 0.0);        
+        float NdotL = max(dot(N, L), 0.0); 
 
         // add to outgoing radiance Lo
-        Lo += (kD * albedo / PI + specular) * radiance * NdotL; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+        Lo += (1 - CalcOmniShadowFactor(pointLight[i], i)) * (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
     }   
     
      // ambient lighting (we now use IBL as the ambient term)
@@ -232,7 +346,10 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
     vec2 brdf  = texture(u_brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
     vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
 
-     vec3 ambient = (kD * diffuse + specular) * ao;
+    vec3 ambient = (kD * diffuse + specular) * ao;
+
+     
+
 
     vec3 color = ambient + Lo;
 
@@ -246,27 +363,23 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
 
 void main() {   
 
-    vec3  l_albedo   ;
-    vec3  l_normal   ;
-    float l_metallic ;
-    float l_roughness;
-    float l_ao       ;
-    
+    vec3  l_albedo    = vec3(1.0, 0.f, 0.f);
+    vec3  l_normal    = vs_normal;
+    float l_metallic  = 0.6f;
+    float l_roughness = 0.6f;
+    float l_ao        = 1.f;
+
     if(u_usePRB) {
         l_albedo    = pow(texture(u_AlbedoTexture, vs_texcoord).rgb, vec3(2.2));
-        l_normal    = getNormalFromMap();
+        l_normal    = GetNormalFromMap();  
         l_metallic  = texture(u_MetallicTexture, vs_texcoord).r;
         l_roughness = texture(u_RoughnessTexture, vs_texcoord).r;
         l_ao        = texture(u_AOTexture, vs_texcoord).r;
-    } else {
-        l_albedo    = vec3(0.5, 0.f, 0.f);
-        l_normal    = vs_normal;
-        l_metallic  = 0.f;
-        l_roughness = 10.f;
-        l_ao        = 1.f;
     }
-         
-       colour = vec4(CalculatePBR(l_albedo, normalize(l_normal), l_metallic, l_roughness, l_ao), 1.f)
-       + vec4(CalcDirLight(DirLight, normalize(l_normal)), 1.f);
+     
+    colour =  vec4(CalcDirLight(DirLight, l_albedo, l_normal, l_metallic), 1.f)
+    + vec4(CalculatePBR(l_albedo, l_normal, l_metallic, l_roughness, l_ao), 1.f)
+    + vec4(CalcSpotLight(spotlight, 1, l_albedo, l_normal, l_metallic, l_roughness, l_ao), 1.f);
     
+       
 }

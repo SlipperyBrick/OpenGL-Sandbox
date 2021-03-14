@@ -29,17 +29,20 @@ void Model::Load(const char* filepath) {
 
 }
 
-void Model::Create()
-{
-	Mesh* tempMesh = new Mesh();
-	tempMesh->Create(m_vertices.data(), m_indices.data(), m_vertices.size(), m_indices.size());
-	m_meshes.push_back(tempMesh);
+void Model::Create() {
+
+	Mesh* m = new Mesh(m_vertices, m_indices);
+	m_meshes.push_back(m);
+
 }
 
 void Model::Render()
 {
-	for (auto m : m_meshes)
+	UpdateModel();
+	for (auto m : m_meshes) {
+		m->SetModel(this->GetModelPtr());
 		m->Render();
+	}
 }
 
 void Model::ResetModel()
@@ -48,27 +51,9 @@ void Model::ResetModel()
 		m->ResetModel();
 }
 
-glm::mat4 Model::GetModel()
+glm::mat4 Model::GetModelMatrix()
 {
-	return glm::mat4(1);
-}
-
-void Model::SetPosition(const glm::vec3 position)
-{
-	for (auto m : m_meshes)
-		m->SetTranslate(position);
-}
-
-void Model::SetRotate(const glm::vec3 rotation)
-{
-	for (auto m : m_meshes)
-		m->SetRotation(rotation);
-}
-
-void Model::SetScale(const glm::vec3 scale)
-{
-	for (auto m : m_meshes)
-		m->SetScale(scale);
+	return this->GetModel();
 }
 
 void Model::LoadNode(aiNode* node, const aiScene* scene) {
@@ -87,25 +72,20 @@ void Model::LoadNode(aiNode* node, const aiScene* scene) {
 
 void Model::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 
-	for (size_t i = 0; i < mesh->mNumVertices; i++)
-	{
-		m_vertices.push_back(mesh->mVertices[i].x);
-		m_vertices.push_back(mesh->mVertices[i].y);
-		m_vertices.push_back(mesh->mVertices[i].z);
-
+	Vertex v;
+	for (size_t i = 0; i < mesh->mNumVertices; i++) {
+		
+		v.m_position =  glm::vec3(mesh->mVertices[i].x ,  mesh->mVertices[i].y,   mesh->mVertices[i].z);
+		v.m_normal =    glm::vec3(mesh->mNormals[i].x,    mesh->mNormals[i].y,    mesh->mNormals[i].z);
+		v.m_tangent =   glm::vec3(mesh->mTangents[i].x,   mesh->mTangents[i].y,   mesh->mTangents[i].z);
+		v.m_bitangent = glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+	
 		if (mesh->mTextureCoords[0])
-		{
-			m_vertices.push_back(mesh->mTextureCoords[0][i].x);
-			m_vertices.push_back(mesh->mTextureCoords[0][i].y);
-		}
-		else {
-			m_vertices.push_back(0);
-			m_vertices.push_back(0);
-		}
+			v.m_texcoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
+		else 
+			v.m_texcoords = glm::vec2(0.f);
 
-		m_vertices.push_back(mesh->mNormals[i].x);
-		m_vertices.push_back(mesh->mNormals[i].y);
-		m_vertices.push_back(mesh->mNormals[i].z);
+		m_vertices.push_back(v);
 	}
 
 	for (size_t i = 0; i < mesh->mNumFaces; i++) {
