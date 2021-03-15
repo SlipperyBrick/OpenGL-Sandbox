@@ -1,6 +1,23 @@
 #include "Camera.h"
 
-Camera::Camera() {}
+Camera::Camera() {
+
+	m_position = {0, 0, 0};
+	m_front    = {0, 0, 0};
+	m_up       = {0, 1, 0};
+	m_right    = {0, 0, 0};
+	m_worldUp  = { 0, 1, 0 };
+
+	m_yaw = -90.f;
+	m_pitch = 0.f;
+
+	m_fov = 60.f;
+
+	moveSpeed = 5;
+	startingMoveSpeed = 5;
+	turnSpeed = 110;
+
+}
 
 Camera::Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed, float fov)
 {
@@ -92,8 +109,11 @@ glm::mat4 Camera::CalculateViewMatrix()
 }
 
 glm::mat4 Camera::CalculateProjectionMatrix(GLfloat bufferWidth, GLfloat bufferHeight)
-{          
-	return glm::perspective(glm::radians(m_fov), static_cast<float>(bufferWidth) / bufferHeight, 0.1f, 100.f);
+{   
+	//Make sure buffers arent 0 so program doesnt divide 0 by 0
+	(bufferHeight + bufferHeight) == 0 ? bufferHeight = 1 : bufferHeight = bufferHeight;
+	return glm::perspective(glm::radians(m_fov), (bufferWidth) / bufferHeight, 0.1f, 100.f);
+ 	
 }
 
 glm::vec3 Camera::GetCameraPosition()

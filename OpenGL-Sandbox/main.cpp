@@ -194,7 +194,6 @@ void OmniShadowMapPass(PointLight *light) {
 /* ~TODO~
 * Add Base Light Calculations for Point & Spot lights in Shader
 * Add System for passing shadow maps into shader
-* Fix program crashing when window is minimized
 * Add System for swaping sense using GUI
 * Add System for drop and dropping textures with GUI
 * Add Displacement Mapping
