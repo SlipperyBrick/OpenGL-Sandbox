@@ -311,7 +311,7 @@ int main() {
 			}
 			
 			if (ImGui::CollapsingHeader("PointLight Options")) {
-				ImGui::DragFloat3("PL Position", (float*)pointlights[0].GetPositionPtr(), 0.5, -25, 25);
+				ImGui::DragFloat3("PL Position", (float*)pointlights[0].GetPositionPtr(), 0.01, -25, 25);
 				ImGui::ColorEdit3 ("PL Colour", (float*)pointlights[0].GetColourPtr());
 				ImGui::SliderFloat("PL Intensity", pointlights[0].GetIntensityPtr(), 0.f, 5000.f);
 			}
@@ -331,7 +331,7 @@ int main() {
 				ImGui::SliderFloat("SL Intensity", spotLight.GetIntensityPtr(), 0.f, 1000);
 			};
 
-			ImGui::End();
+			
 		}
 
 		skybox.Render(camera.CalculateViewMatrix(), camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()));

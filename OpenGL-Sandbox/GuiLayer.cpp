@@ -48,6 +48,7 @@ void GuiLayer::Begin()
 
 void GuiLayer::End()
 {
+	ImGui::End();
 	ImGui::Render();
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 }
