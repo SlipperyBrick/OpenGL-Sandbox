@@ -317,9 +317,10 @@ int main() {
 			}
 
 			if (ImGui::CollapsingHeader("DirectionLight Options")) {
-				ImGui::SliderFloat ("DL Intensity", DirLight.GetIntensityPtr(), 0.f, 1.f);
+				ImGui::ColorEdit3("DL Intensity", (float*)DirLight.GetColourPtr());
 				ImGui::SliderFloat3("DL Direction", (float*)(DirLight.GetDirectionPtr()), -1.f, 1.f);
 				ImGui::DragFloat   ("DL Shadow Filter Level", &u_FilterLevel, 1.f, 0.f, 10);
+				ImGui::SliderFloat ("DL Intensity", DirLight.GetIntensityPtr(), 0.f, 1.f);
 			}
 
 			if(ImGui::CollapsingHeader("SpotLight Options")) {
@@ -328,7 +329,7 @@ int main() {
 				ImGui::DragFloat3("SL Direction", (float*)spotLight.GetDirectionPtr(), 0.01, -1, 1);
 				ImGui::DragFloat ("SL InnerCutOff", spotLight.GetInnerCutOffPtr(), 0.01, 0, 1);
 				ImGui::DragFloat ("SL OutterCutOff", spotLight.GetOutterCutOffPtr(), 0.01, 0, 1);
-				ImGui::SliderFloat("SL Intensity", spotLight.GetIntensityPtr(), 0.f, 1000);
+				ImGui::SliderFloat("SL Intensity", spotLight.GetIntensityPtr(), 0.f, 5000);
 			};
 
 			

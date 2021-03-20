@@ -247,7 +247,7 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
 }   
 
-vec3 CalcSpotLight(PointLight light, vec3 view, vec3 albedo, vec3 normal, float roughness, float metallic, vec3 F0) {
+vec3 CalcPointLight(PointLight light, vec3 view, vec3 albedo, vec3 normal, float roughness, float metallic, vec3 F0) {
 
         // calculate per-light radiance
         vec3 L = normalize(light.m_position - vs_position);
@@ -279,11 +279,12 @@ vec3 CalcSpotLight(PointLight light, vec3 view, vec3 albedo, vec3 normal, float 
         // scale light by NdotL
         float NdotL = max(dot(normal, L), 0.0); 
 
-        return (1 - CalcOmniShadowFactor(light, 0)) * (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+        return (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
 }
 
 vec3 CalcSpotLight(SpotLight light, int index, vec3 albedo, vec3 normal, float metallic, float roughness, float ao) {
     
+    vec3 V = normalize(vs_cameraPosition - vs_position);
     vec3 lightDir = normalize(-light.base.m_position - vs_position);
     float theta = dot(lightDir, normalize(light.m_direction));
     float epsilon = light.m_innerEdge - light.m_outterEdge;
@@ -292,24 +293,16 @@ vec3 CalcSpotLight(SpotLight light, int index, vec3 albedo, vec3 normal, float m
     float distance = length(light.base.m_position - vs_position);
     float attenuation = 1.0 / (distance * distance);
     
-    // ambient
-    vec3 ambient = light.base.m_colour.rgb * (albedo*ao);
-    
-    // diffuse 
-    float diff = max(dot(normal, lightDir), 0.0);
-    vec3 diffuse = light.base.m_colour.rgb  * diff * albedo;  
+    vec3 F0 = vec3(0.04); 
+    F0 = mix(F0, albedo, metallic);
 
-    // specular
-    vec3 viewDir = normalize(vs_cameraPosition - vs_position);
-    vec3 reflectDir = reflect(lightDir, normal);  
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), metallic);
-    vec3 specular = light.base.m_colour.rgb * spec * roughness; 
+    vec3 colour = CalcPointLight(light.base, V, albedo, normal, roughness, metallic, F0);
 
     float shadowFactor = CalcOmniShadowFactor(light, 0);
 
     if(theta > light.m_innerEdge) 
     {   
-        return (1 - shadowFactor) * (diffuse + specular) * (light.base.m_colour.rgb * light.base.m_colour.w)  * hardness * attenuation;
+        return (1 - shadowFactor) * (colour * hardness) ;
     }
 
 }
@@ -325,12 +318,12 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
     // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)    
     vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
-
+    //(1 - CalcOmniShadowFactor(light, 0)) * 
     // reflectance equation
     vec3 Lo = vec3(0.0);
     for(int i = 0; i < MAX_POINT_LIGHTS; i++)  {
         // add to outgoing radiance Lo
-        Lo += CalcSpotLight(pointLight[i], V, albedo, N, roughness, metallic, F0);
+        Lo += (1 - CalcOmniShadowFactor(pointLight[i], i)) * CalcPointLight(pointLight[i], V, albedo, N, roughness, metallic, F0);
     }   
     
      // ambient lighting (we now use IBL as the ambient term)
