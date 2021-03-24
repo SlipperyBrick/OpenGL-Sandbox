@@ -72,6 +72,21 @@ void Texture::LoadHDRIData()
 	m_imageHDRI = stbi_loadf(m_path, &this->m_width, &this->m_height, &this->m_components, NULL);
 }
 
+void Texture::CreateDrawTexture(unsigned int width, unsigned int height)
+{
+	this->m_textureType = GL_TEXTURE_2D;
+
+	glGenTextures(1, &m_id);
+	glBindTexture(GL_TEXTURE_2D, m_id);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);	// Framebuffer texture size - resolution scale, i.e., width * height = 100% scale
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+}
+
 void Texture::CreateTexture2D()
 {
 	LoadImageData();
@@ -94,12 +109,11 @@ void Texture::CreateTexture2D()
 	    
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image2D);
 
-	    glGenerateMipmap(GL_TEXTURE_2D);
-	    glBindTexture(GL_TEXTURE_2D, NULL);
-		
-   
+	    glGenerateMipmap(GL_TEXTURE_2D);	
 	}
-	    SOIL_free_image_data(m_image2D);
+
+	glBindTexture(GL_TEXTURE_2D, NULL);
+	SOIL_free_image_data(m_image2D);
 }
 
 void Texture::LoadCubemap(const char* rightFace, const char* leftFace, 
@@ -115,6 +129,7 @@ void Texture::LoadCubemap(const char* rightFace, const char* leftFace,
 	imagePaths[5] = frontFace;
 
 	m_textureType = GL_TEXTURE_CUBE_MAP;
+
 	glGenTextures(1, &m_id);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
 

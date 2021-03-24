@@ -151,6 +151,7 @@
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="OmniShadowMap.cpp" />
     <ClCompile Include="PointLight.cpp" />
+    <ClCompile Include="RenderTarget.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="Skybox.cpp" />
@@ -170,6 +171,7 @@
     <ClInclude Include="OmniShadowMap.h" />
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="Random.hpp" />
+    <ClInclude Include="RenderTarget.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="Skybox.h" />
@@ -196,6 +198,8 @@
     <None Include="Shaders\OmniShadowMapShaderGeom.glsl" />
     <None Include="Shaders\OmniShadowMapShaderVert.glsl" />
     <None Include="Shaders\PrefilterFrag.glsl" />
+    <None Include="Shaders\QuadShaderFrag.glsl" />
+    <None Include="Shaders\QuadShaderVert.glsl" />
     <None Include="Shaders\SkyboxFrag.glsl" />
     <None Include="Shaders\SkyboxVert.glsl" />
     <None Include="Shaders\Vertex.glsl" />

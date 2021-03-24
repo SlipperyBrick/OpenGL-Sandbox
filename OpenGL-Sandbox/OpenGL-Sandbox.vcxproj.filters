@@ -69,6 +69,9 @@
     <ClCompile Include="SpotLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="RenderTarget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Camera.h">
@@ -128,6 +131,9 @@
     <ClInclude Include="SpotLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="RenderTarget.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Shaders\Frag.glsl">
@@ -182,6 +188,12 @@
       <Filter>Resource Files\Shaders</Filter>
     </None>
     <None Include="Shaders\OmniShadowMapShaderGeom.glsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\QuadShaderFrag.glsl">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
+    <None Include="Shaders\QuadShaderVert.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
   </ItemGroup>

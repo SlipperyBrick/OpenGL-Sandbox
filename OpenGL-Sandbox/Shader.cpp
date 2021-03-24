@@ -114,6 +114,11 @@ void Shader::Set2f(glm::vec2 value, const GLchar* name)
    glUniform2fv(glGetUniformLocation(shaderID, name), 1, glm::value_ptr(value));
 }
 
+void Shader::SetVec2f(glm::vec2 value, const GLchar* name)
+{
+	glUniform2fv(glGetUniformLocation(shaderID, name), 1, glm::value_ptr(value));
+}
+
 void Shader::SetVec3f(glm::fvec3 value, const GLchar* name)
 {
 	glUniform3fv(glGetUniformLocation(shaderID, name), 1, glm::value_ptr(value));
@@ -122,6 +127,11 @@ void Shader::SetVec3f(glm::fvec3 value, const GLchar* name)
 void Shader::SetVec4f(glm::vec4 value, const GLchar* name)
 {
 	glUniform4fv(glGetUniformLocation(shaderID, name), 1, glm::value_ptr(value));
+}
+
+void Shader::SetMat3f(glm::mat3 value, const char* name, bool transpose)
+{
+	glUniformMatrix3fv(glGetUniformLocation(shaderID, name), 1, transpose, glm::value_ptr(value));
 }
 
 void Shader::SetMat4f(glm::mat4 value, const char* uniformName, bool transpose)

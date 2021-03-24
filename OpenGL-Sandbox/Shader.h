@@ -35,8 +35,10 @@ public:
 	void Set1f(GLfloat value, const GLchar* name);
 	void Set1i(GLint value, const GLchar* name);
 	void Set2f(glm::vec2 value, const GLchar* name);
+	void SetVec2f(glm::vec2 value, const GLchar* name);
 	void SetVec3f(glm::fvec3 value, const GLchar* name);
 	void SetVec4f(glm::vec4 value, const GLchar* name);
+	void SetMat3f(glm::mat3 value, const char* name, bool transpose);
 	void SetMat4f(glm::mat4 value, const char* uniformName, bool transpose);
 
 	void Validate();

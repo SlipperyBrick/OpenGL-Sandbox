@@ -19,6 +19,7 @@
 #include "Timer.hpp"
 #include "DirectionalLight.h"
 #include "SpotLight.h"
+#include "RenderTarget.h"
 
 Window window("Window", true, 1460, 768);
 
@@ -28,24 +29,28 @@ Shader shader;
 Shader dirShadowShader;
 Shader omniShadowShader;
 
+Shader QuadShader;
+
+RenderTarget renderTarget(window.GetBufferWidth(), window.GetBufferHeight());
+
 Texture HDRI("Textures/HDRIs/herkulessaulen_4k.hdr");
 Texture hdriCubemap;
 Texture irradianceCubemap;
 Texture prefilterMap;
 Texture brdfLUTMap;
 
-Texture Gold_Albedo		 ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Albedo_4K__schvfgwp.jpg");
-Texture Gold_Normal      ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Normal_4K__schvfgwp.jpg");
-Texture Gold_Roughness   ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Roughness_4K__schvfgwp.jpg");
-Texture Gold_AO          ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
-Texture Gold_Metallic    ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
+Texture Gold_Albedo("Textures/PBR/Gold (Au)_schvfgwp_Metal/Albedo_4K__schvfgwp.jpg");
+Texture Gold_Normal("Textures/PBR/Gold (Au)_schvfgwp_Metal/Normal_4K__schvfgwp.jpg");
+Texture Gold_Roughness("Textures/PBR/Gold (Au)_schvfgwp_Metal/Roughness_4K__schvfgwp.jpg");
+Texture Gold_AO("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
+Texture Gold_Metallic("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
 Texture Gold_Displacement("Textures/parallax_mapping_height_map.png");
 
-Texture Rock_Albedo      ("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Albedo_4K__vclnajuew.jpg");
-Texture Rock_Normal      ("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Normal_4K__vclnajuew.jpg");
-Texture Rock_Roughness   ("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Roughness_4K__vclnajuew.jpg");
-Texture Rock_AO			 ("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/AO_4K__vclnajuew.jpg");
-Texture Rock_Metallic    ("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Albedo_4K__vclnajuew.jpg");
+Texture Rock_Albedo("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Albedo_4K__vclnajuew.jpg");
+Texture Rock_Normal("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Normal_4K__vclnajuew.jpg");
+Texture Rock_Roughness("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Roughness_4K__vclnajuew.jpg");
+Texture Rock_AO("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/AO_4K__vclnajuew.jpg");
+Texture Rock_Metallic("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Albedo_4K__vclnajuew.jpg");
 Texture Rock_Displacement("Textures/parallax_mapping_height_map.png");
 
 DirectionalLight DirLight(1024, 1024, { 1, 1, 1 }, 0.f, { 0.5, -1, 0 });
@@ -60,6 +65,11 @@ Model cube;
 bool useTexture = true;
 bool toggleShadowMapTexture = true;
 static float u_FilterLevel = 3;
+
+bool u_MonochromeToggle = false;
+bool u_WobbleToggle     = false;
+bool u_BlurToggle       = false;
+float u_BlurStrength = 1.f;
 
 void SetSpotLightUniforms(Shader* shader) {
 
@@ -77,32 +87,32 @@ void SetSpotLightUniforms(Shader* shader) {
 }
 
 void PBRScene(Shader* shader) {
-	
+
 	static int nrRows = 5;
 	static int nrColumns = 5;
 	static float spacing = 2.5;
 
 	for (int row = 0; row < nrRows; row++) {
-		
+
 		shader->Set1f((float)row / (float)nrRows, "u_metallic");
-		
+
 		for (int col = 0; col < nrColumns; col++) {
 
-		// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
-		// on direct lighting.
-		shader->Set1f(glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f), "u_roughness");
+			// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
+			// on direct lighting.
+			shader->Set1f(glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f), "u_roughness");
 
-		shpere.ResetModel();
-		shpere.SetRotation({ 90.f, 0.f, 0.f });
-		shpere.SetTranslation(glm::vec3(
-			(col - (nrColumns / 2)) * spacing,
-			(row - (nrRows / 2)) * spacing,
-			0.0f));
+			shpere.ResetModel();
+			shpere.SetRotation({ 90.f, 0.f, 0.f });
+			shpere.SetTranslation(glm::vec3(
+				(col - (nrColumns / 2)) * spacing,
+				(row - (nrRows / 2)) * spacing,
+				0.0f));
 
-		shader->SetMat4f(shpere.GetModel(), "u_Model", false);
-		shpere.Render();
-	    }
-    }
+			shader->SetMat4f(shpere.GetModel(), "u_Model", false);
+			shpere.Render();
+		}
+	}
 
 }
 
@@ -114,7 +124,7 @@ void RenderScene(Shader* shader) {
 	Gold_AO.Bind(3);
 	Gold_Metallic.Bind(4);
 	Gold_Displacement.Bind(5);
-	
+
 	shader->Set1i(0, "u_test");
 	shader->Set1i(useTexture, "u_usePRB");
 	shader->SetMat4f(shpere.GetModel(), "u_Model", false);
@@ -128,7 +138,7 @@ void RenderScene(Shader* shader) {
 	Rock_Displacement.Bind(5);
 
 	shader->Set1i(1, "u_usePRB");
-	quad.SetScale({5.f, 0.001, 5.f});
+	quad.SetScale({ 5.f, 0.001, 5.f });
 	quad.SetTranslation({ 0.f, -2.5f, 0.f });
 	quad.SetRotation({ 180.f, 0.f, 0.f });
 	shader->SetMat4f(quad.GetModel(), "u_Model", false);
@@ -144,28 +154,28 @@ void RenderCubeScene(Shader* shader) {
 }
 
 void DirectionalShadowMapPass() {
-	
+
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	dirShadowShader.Bind();
 	dirShadowShader.SetMat4f(DirLight.CalculateLightTransform(), "u_DirectionLightTransform", false);
 
 	glViewport(0, 0, DirLight.GetShadowMapPtr()->GetWidth(), DirLight.GetShadowMapPtr()->GetHeight());
-	DirLight.GetShadowMapPtr()->BindFBO();	
+	DirLight.GetShadowMapPtr()->BindFBO();
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	RenderScene(&dirShadowShader);
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	renderTarget.Bind(window.GetBufferWidth(), window.GetBufferHeight());
 	glDisable(GL_CULL_FACE);
 };
 
-void OmniShadowMapPass(PointLight *light) {
+void OmniShadowMapPass(PointLight* light) {
 
-	//glEnable(GL_CULL_FACE);
-	//glCullFace(GL_FRONT);
-	
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+
 	omniShadowShader.Bind();
-	
+
 	omniShadowShader.SetVec3f(light->GetPosition(), "u_lightPos");
 	omniShadowShader.Set1f(light->GetFarPlane(), "u_farPlane");
 
@@ -183,22 +193,28 @@ void OmniShadowMapPass(PointLight *light) {
 	light->GetShadowMapPtr()->BindFBO();
 	glClear(GL_DEPTH_BUFFER_BIT);
 
-	omniShadowShader.Validate();
 	RenderScene(&omniShadowShader);
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-	//glDisable(GL_CULL_FACE);
+	renderTarget.Bind(window.GetBufferWidth(), window.GetBufferHeight());
+	glDisable(GL_CULL_FACE);
 
 }
 
 /* ~TODO~
-* Add Base Light Calculations for Point & Spot lights in Shader
+* Add Post-Processing ASAP
 * Add System for passing shadow maps into shader
 * Add System for swaping sense using GUI
 * Add System for drop and dropping textures with GUI
 * Add Displacement Mapping
 * Add Skelatal Animation Class
 */
+
+glm::mat3 blur = {
+
+  0.0625, 0.125, 0.0625,
+  0.125 , 0.25 , 0.125,
+  0.0625, 0.125, 0.0625
+};
 
 int main() {
 
@@ -207,6 +223,7 @@ int main() {
 	shader.CreateFromFile("Shaders/Vertex.glsl", "Shaders/Frag.glsl");
 	dirShadowShader.CreateFromFile("Shaders/DirectionShadowMapVert.glsl", "Shaders/DirectionShadowMapFrag.glsl");
 	omniShadowShader.CreateFromFile("Shaders/OmniShadowMapShaderVert.glsl", "Shaders/OmniShadowMapShaderGeom.glsl", "Shaders/OmniShadowMapShaderFrag.glsl");
+	QuadShader.CreateFromFile("Shaders/QuadShaderVert.glsl", "Shaders/QuadShaderFrag.glsl");
 
 	HDRI.CreateHDRI();
 	hdriCubemap.CreateCubemapFromHDRI(HDRI);
@@ -227,14 +244,14 @@ int main() {
 	Gold_AO.CreateTexture2D();
 	Gold_Metallic.CreateTexture2D();
 	Gold_Displacement.CreateTexture2D();
-	
+
 	pointlights[0] = PointLight({ 1, 1, 1, 0.f }, { 2.f, 5.0f, 0.0f }, 1024, 1024, 0.1, 100);
 
 	Skybox skybox(&hdriCubemap);
 
 	quad.Load("Models/quad.fbx");
 	quad.Create();
-	
+
 	shpere.Load("Models/Sphere64.fbx");
 	shpere.Create();
 
@@ -283,63 +300,24 @@ int main() {
 		std::string col = "pointLight[" + std::to_string(i) + "].m_colour";
 		shader.SetVec4f(glm::vec4(pointlights[i].GetColour(), pointlights[i].GetIntensity()), col.c_str());
 	}
-	
+
 	shader.Unbind();
 
 	while (window.IsOpen()) {
+
+		renderTarget.Bind(window.GetBufferWidth(), window.GetBufferHeight());
 
 		//Shadow Passes
 		DirectionalShadowMapPass();
 		OmniShadowMapPass(&pointlights[0]);
 		OmniShadowMapPass(&spotLight);
 
-		window.Update();
-		if (window.UpdateOnFocus()) {
-			camera.mouseControl(window.GetXChange(), window.GetYChange(), window.GetDeltaTime());
-			camera.keyControl(window.GetsKeys(), window.GetDeltaTime());
-		}
-
-		// GUI //
-		{
-			GuiLayer.Begin();
-
-			ImGui::Begin("GUI");
-			ImGui::Text("Application average %.2f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-
-			if (ImGui::CollapsingHeader("Texture Options")) {
-				ImGui::Checkbox("Use PBR Textures", &useTexture);
-			}
-			
-			if (ImGui::CollapsingHeader("PointLight Options")) {
-				ImGui::DragFloat3("PL Position", (float*)pointlights[0].GetPositionPtr(), 0.01, -25, 25);
-				ImGui::ColorEdit3 ("PL Colour", (float*)pointlights[0].GetColourPtr());
-				ImGui::SliderFloat("PL Intensity", pointlights[0].GetIntensityPtr(), 0.f, 5000.f);
-			}
-
-			if (ImGui::CollapsingHeader("DirectionLight Options")) {
-				ImGui::SliderFloat ("DL Intensity", DirLight.GetIntensityPtr(), 0.f, 1.f);
-				ImGui::SliderFloat3("DL Direction", (float*)(DirLight.GetDirectionPtr()), -1.f, 1.f);
-				ImGui::DragFloat   ("DL Shadow Filter Level", &u_FilterLevel, 1.f, 0.f, 10);
-			}
-
-			if(ImGui::CollapsingHeader("SpotLight Options")) {
-				ImGui::ColorEdit3("SL Colour", (float*)spotLight.GetColourPtr());
-				ImGui::DragFloat3("SL Position", (float*)spotLight.GetPositionPtr(), 0.01, -25, 25);
-				ImGui::DragFloat3("SL Direction", (float*)spotLight.GetDirectionPtr(), 0.01, -1, 1);
-				ImGui::DragFloat ("SL InnerCutOff", spotLight.GetInnerCutOffPtr(), 0.01, 0, 1);
-				ImGui::DragFloat ("SL OutterCutOff", spotLight.GetOutterCutOffPtr(), 0.01, 0, 1);
-				ImGui::SliderFloat("SL Intensity", spotLight.GetIntensityPtr(), 0.f, 1000);
-			};
-
-			
-		}
-
 		skybox.Render(camera.CalculateViewMatrix(), camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()));
 
 		shader.Bind();
-		
+
 		SetSpotLightUniforms(&shader);
-		
+
 		shader.SetVec4f(glm::vec4(pointlights[0].GetColour(), pointlights[0].GetIntensity()), "pointLight[0].m_colour");
 		shader.SetVec3f(pointlights[0].GetPosition(), "pointLight[0].m_position");
 		shader.SetVec3f(camera.GetCameraPosition(), "u_cameraPosition");
@@ -352,8 +330,79 @@ int main() {
 
 		RenderScene(&shader);
 
+		renderTarget.Unbind();
+
+		window.Update();
+		if (window.UpdateOnFocus()) {
+			camera.mouseControl(window.GetXChange(), window.GetYChange(), window.GetDeltaTime());
+			camera.keyControl(window.GetsKeys(), window.GetDeltaTime());
+		}
+
+		glDisable(GL_DEPTH_TEST);
+		// GUI //
+		{
+			GuiLayer.Begin();
+
+			ImGui::Begin("GUI");
+			ImGui::Text("Application average %.2f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+
+			if (ImGui::CollapsingHeader("Render Options")) {
+				ImGui::Checkbox("Blur", &u_BlurToggle);
+				ImGui::SliderFloat("Blur Strength", &u_BlurStrength, 1, 10);
+				ImGui::Checkbox("Woggle", &u_WobbleToggle);
+				ImGui::Checkbox("Monochrome", &u_MonochromeToggle);
+			}
+
+			if (ImGui::CollapsingHeader("Texture Options")) {
+				ImGui::Checkbox("Use PBR Textures", &useTexture);
+			}
+
+			if (ImGui::CollapsingHeader("PointLight Options")) {
+				ImGui::DragFloat3("PL Position", (float*)pointlights[0].GetPositionPtr(), 0.01, -25, 25);
+				ImGui::ColorEdit3("PL Colour", (float*)pointlights[0].GetColourPtr());
+				ImGui::SliderFloat("PL Intensity", pointlights[0].GetIntensityPtr(), 0.f, 5000.f);
+			}
+
+			if (ImGui::CollapsingHeader("DirectionLight Options")) {
+				ImGui::ColorEdit3("DL Intensity", (float*)DirLight.GetColourPtr());
+				ImGui::SliderFloat3("DL Direction", (float*)(DirLight.GetDirectionPtr()), -1.f, 1.f);
+				ImGui::DragFloat("DL Shadow Filter Level", &u_FilterLevel, 1.f, 0.f, 10);
+				ImGui::SliderFloat("DL Intensity", DirLight.GetIntensityPtr(), 0.f, 1.f);
+			}
+
+			if (ImGui::CollapsingHeader("SpotLight Options")) {
+				ImGui::ColorEdit3("SL Colour", (float*)spotLight.GetColourPtr());
+				ImGui::DragFloat3("SL Position", (float*)spotLight.GetPositionPtr(), 0.01, -25, 25);
+				ImGui::DragFloat3("SL Direction", (float*)spotLight.GetDirectionPtr(), 0.01, -1, 1);
+				ImGui::DragFloat("SL InnerCutOff", spotLight.GetInnerCutOffPtr(), 0.01, 0, 1);
+				ImGui::DragFloat("SL OutterCutOff", spotLight.GetOutterCutOffPtr(), 0.01, 0, 1);
+				ImGui::SliderFloat("SL Intensity", spotLight.GetIntensityPtr(), 0.f, 5000);
+			};
+
+			ImGui::End();
+		}
+
+		//Shader
+		QuadShader.Bind();
+		
+		QuadShader.Set1i(0, "u_Frame");
+		renderTarget.GetTexture()->Bind(0);
+
+		QuadShader.Set1i(u_BlurToggle, "u_BlurToggle");
+		QuadShader.Set1f(u_BlurStrength, "u_BlurStrength");
+		QuadShader.Set1i(u_MonochromeToggle, "u_MonochromeToggle");
+		QuadShader.Set1i(u_WobbleToggle, "u_WobbleToggle");
+
+		QuadShader.SetVec2f(glm::vec2(window.GetBufferWidth(), window.GetBufferHeight()), "u_Resolution");
+		QuadShader.Set1f(glfwGetTime(), "u_Offset");
+		QuadShader.SetMat3f(blur, "u_blur", false);
+
+		//Draw quad
+		renderQuad();
+
 		GuiLayer.End();
 		window.Clear();
+
 	}
 
 

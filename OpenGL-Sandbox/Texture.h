@@ -25,8 +25,11 @@ public:
 	void Bind(const GLint textureUnit);
 	void Unbind();
 
+
 	void LoadImageData();
 	void LoadHDRIData();
+
+	void CreateDrawTexture(unsigned int width, unsigned int height);
 
 	void CreateTexture2D();
 
@@ -40,6 +43,9 @@ public:
 	void CreateIrradianceTexture(Texture* Cubemap);
 	void CreatePrefilterMap(Texture* environmentMap);
 	void CreateBRDFLookUpTable();
+
+	unsigned int inline GetWidth()  { return m_width; };
+	unsigned int inline GetHeight() { return m_height; };
 
 private:
 
