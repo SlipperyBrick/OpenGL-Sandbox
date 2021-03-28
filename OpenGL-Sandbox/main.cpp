@@ -20,8 +20,11 @@
 #include "DirectionalLight.h"
 #include "SpotLight.h"
 #include "RenderTarget.h"
+#include "Random.hpp"
 
 Window window("Window", true, 1460, 768);
+
+Random Random::s_Instance;
 
 Camera camera(glm::vec3(0.f, 2.f, 10.f), glm::vec3(0, 1, 0), 0, 0, 5, 110, 90.f);
 
@@ -65,11 +68,14 @@ Model cube;
 bool useTexture = true;
 bool toggleShadowMapTexture = true;
 static float u_FilterLevel = 3;
+bool spotlightFlickering = false;
+float spotlightFlickeringSpeed = 1.f;
 
 bool u_MonochromeToggle = false;
 bool u_WobbleToggle     = false;
 bool u_BlurToggle       = false;
 float u_BlurStrength = 1.f;
+float x = 0, y = 0;
 
 void SetSpotLightUniforms(Shader* shader) {
 
@@ -83,6 +89,7 @@ void SetSpotLightUniforms(Shader* shader) {
 
 	shader->Set1f(spotLight.GetOutterCutOff(), "spotlight.m_outterEdge");
 	shader->Set1f(spotLight.GetInnerCutOff(), "spotlight.m_innerEdge");
+
 
 }
 
@@ -116,7 +123,30 @@ void PBRScene(Shader* shader) {
 
 }
 
+
 void RenderScene(Shader* shader) {
+	
+	shader->Bind();
+
+	if (spotlightFlickering) {
+		float v0 = glfwGetTime() * spotlightFlickeringSpeed;
+		float v1 = (glm::fract(sin(v0)));
+		spotLight.SetIntensity(v1 * 5000);
+	}
+
+	SetSpotLightUniforms(shader);
+
+	shader->Set1f(glfwGetTime(), "u_Time");
+	shader->SetVec4f(glm::vec4(pointlights[0].GetColour(), pointlights[0].GetIntensity()), "pointLight[0].m_colour");
+	shader->SetVec3f(pointlights[0].GetPosition(), "pointLight[0].m_position");
+	shader->SetVec3f(camera.GetCameraPosition(), "u_cameraPosition");
+	shader->SetMat4f(camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()), "u_Projection", false);
+	shader->SetMat4f(camera.CalculateViewMatrix(), "u_View", false);
+	shader->SetVec4f(glm::vec4(DirLight.GetColour(), DirLight.GetIntensity()), "DirLight.m_colour");
+	shader->SetVec3f(DirLight.GetDirection(), "DirLight.m_direction");
+	shader->SetMat4f(DirLight.CalculateLightTransform(), "u_DirectionLightTransform", false);
+	shader->Set1i(u_FilterLevel, "u_FilterLevel");
+
 
 	Gold_Albedo.Bind(0);
 	Gold_Normal.Bind(1);
@@ -127,8 +157,12 @@ void RenderScene(Shader* shader) {
 
 	shader->Set1i(0, "u_test");
 	shader->Set1i(useTexture, "u_usePRB");
-	shader->SetMat4f(shpere.GetModel(), "u_Model", false);
-	shpere.Render();
+	cube.SetRotation({ x , y, cube.GetRotation().z });
+	shader->SetMat4f(cube.GetModel(), "u_Model", false);
+	cube.Render();
+
+	x += 5 * window.GetDeltaTime();
+	y += 5 * window.GetDeltaTime();
 
 	Rock_Albedo.Bind(0);
 	Rock_Normal.Bind(1);
@@ -145,14 +179,6 @@ void RenderScene(Shader* shader) {
 	quad.Render();
 }
 
-void RenderCubeScene(Shader* shader) {
-	shader->Set1i(toggleShadowMapTexture, "u_test");
-	shader->Set1i(0, "u_usePRB");
-	cube.SetTranslation({ 0, 5, 0 });
-	shader->SetMat4f(cube.GetModel(), "u_Model", false);
-	cube.Render();
-}
-
 void DirectionalShadowMapPass() {
 
 	glEnable(GL_CULL_FACE);
@@ -165,7 +191,7 @@ void DirectionalShadowMapPass() {
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	RenderScene(&dirShadowShader);
-	renderTarget.Bind(window.GetBufferWidth(), window.GetBufferHeight());
+	renderTarget.Bind(window);
 	glDisable(GL_CULL_FACE);
 };
 
@@ -195,26 +221,18 @@ void OmniShadowMapPass(PointLight* light) {
 
 	RenderScene(&omniShadowShader);
 
-	renderTarget.Bind(window.GetBufferWidth(), window.GetBufferHeight());
+	renderTarget.Bind(window);
 	glDisable(GL_CULL_FACE);
 
 }
 
 /* ~TODO~
-* Add Post-Processing ASAP
 * Add System for passing shadow maps into shader
 * Add System for swaping sense using GUI
 * Add System for drop and dropping textures with GUI
 * Add Displacement Mapping
 * Add Skelatal Animation Class
 */
-
-glm::mat3 blur = {
-
-  0.0625, 0.125, 0.0625,
-  0.125 , 0.25 , 0.125,
-  0.0625, 0.125, 0.0625
-};
 
 int main() {
 
@@ -288,7 +306,6 @@ int main() {
 	shader.Set1i(10, "u_omniShadowMap");
 	shader.Set1i(11, "u_SpotLightShadowMap");
 
-
 	shader.Set1f(pointlights[0].GetFarPlane(), "u_omniFarPlane");
 	shader.Set1f(spotLight.GetFarPlane(), "u_SpotLightFarPlane");
 
@@ -304,8 +321,9 @@ int main() {
 	shader.Unbind();
 
 	while (window.IsOpen()) {
+		
 
-		renderTarget.Bind(window.GetBufferWidth(), window.GetBufferHeight());
+		renderTarget.Bind(window);
 
 		//Shadow Passes
 		DirectionalShadowMapPass();
@@ -314,31 +332,16 @@ int main() {
 
 		skybox.Render(camera.CalculateViewMatrix(), camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()));
 
-		shader.Bind();
-
-		SetSpotLightUniforms(&shader);
-
-		shader.SetVec4f(glm::vec4(pointlights[0].GetColour(), pointlights[0].GetIntensity()), "pointLight[0].m_colour");
-		shader.SetVec3f(pointlights[0].GetPosition(), "pointLight[0].m_position");
-		shader.SetVec3f(camera.GetCameraPosition(), "u_cameraPosition");
-		shader.SetMat4f(camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()), "u_Projection", false);
-		shader.SetMat4f(camera.CalculateViewMatrix(), "u_View", false);
-		shader.SetVec4f(glm::vec4(DirLight.GetColour(), DirLight.GetIntensity()), "DirLight.m_colour");
-		shader.SetVec3f(DirLight.GetDirection(), "DirLight.m_direction");
-		shader.SetMat4f(DirLight.CalculateLightTransform(), "u_DirectionLightTransform", false);
-		shader.Set1i(u_FilterLevel, "u_FilterLevel");
-
 		RenderScene(&shader);
 
 		renderTarget.Unbind();
-
+	
 		window.Update();
 		if (window.UpdateOnFocus()) {
 			camera.mouseControl(window.GetXChange(), window.GetYChange(), window.GetDeltaTime());
 			camera.keyControl(window.GetsKeys(), window.GetDeltaTime());
 		}
 
-		glDisable(GL_DEPTH_TEST);
 		// GUI //
 		{
 			GuiLayer.Begin();
@@ -376,13 +379,18 @@ int main() {
 				ImGui::DragFloat3("SL Direction", (float*)spotLight.GetDirectionPtr(), 0.01, -1, 1);
 				ImGui::DragFloat("SL InnerCutOff", spotLight.GetInnerCutOffPtr(), 0.01, 0, 1);
 				ImGui::DragFloat("SL OutterCutOff", spotLight.GetOutterCutOffPtr(), 0.01, 0, 1);
-				ImGui::SliderFloat("SL Intensity", spotLight.GetIntensityPtr(), 0.f, 5000);
+				ImGui::Checkbox("Enable Flickering", &spotlightFlickering);
+				if (spotlightFlickering) {
+					ImGui::SliderFloat("SL Flickering Speed", &spotlightFlickeringSpeed, 0.f, 10);
+				}
+				else {
+					ImGui::SliderFloat("SL Intensity", spotLight.GetIntensityPtr(), 0.f, 5000);
+				}
 			};
 
 			ImGui::End();
 		}
 
-		//Shader
 		QuadShader.Bind();
 		
 		QuadShader.Set1i(0, "u_Frame");
@@ -395,7 +403,6 @@ int main() {
 
 		QuadShader.SetVec2f(glm::vec2(window.GetBufferWidth(), window.GetBufferHeight()), "u_Resolution");
 		QuadShader.Set1f(glfwGetTime(), "u_Offset");
-		QuadShader.SetMat3f(blur, "u_blur", false);
 
 		//Draw quad
 		renderQuad();

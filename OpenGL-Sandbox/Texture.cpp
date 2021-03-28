@@ -25,8 +25,8 @@ Texture::Texture() {
 	m_imageHDRI = nullptr;
 }
 
-Texture::Texture(const char* path)
-{
+Texture::Texture(const char* path) {
+
 	m_id = NULL;
 	m_width = NULL;
 	m_height = NULL;
@@ -39,8 +39,7 @@ Texture::Texture(const char* path)
 	m_imageHDRI = nullptr;
 }
 
-Texture::~Texture()
-{
+Texture::~Texture() {
 	glDeleteTextures(1, &m_id);
 }
 
@@ -80,7 +79,8 @@ void Texture::CreateDrawTexture(unsigned int width, unsigned int height)
 	glBindTexture(GL_TEXTURE_2D, m_id);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);	// Framebuffer texture size - resolution scale, i.e., width * height = 100% scale
-
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 

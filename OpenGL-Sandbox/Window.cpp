@@ -21,8 +21,7 @@ void Window::Update() {
 
 	glfwPollEvents();
 	glfwGetFramebufferSize(m_window, &m_bufferWidth, &m_bufferHeight);
-	glViewport(0, 0, m_bufferWidth, m_bufferHeight);
-
+	SetViewport();
 	//Delta Time
 	cTime = static_cast<float>(glfwGetTime());
 	dt = cTime - lTime;
@@ -30,12 +29,13 @@ void Window::Update() {
 
 }
 
-void Window::Clear()
-{
-	glfwSwapBuffers(m_window);
-	glClearColor(0.f, 0.f, 0.f, 1.f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+void Window::Clear() {
 	
+	glfwSwapBuffers(m_window);
+	
+	glClearColor(1.f, 0.f, 0.f, 1.f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
 }
 
 bool Window::IsOpen()
@@ -56,7 +56,7 @@ bool Window::UpdateOnFocus()
 
 void Window::SetViewport()
 {
-	glViewport(0, 0, m_width, m_height);
+	glViewport(0, 0, m_bufferWidth, m_bufferHeight);
 }
 
 float Window::GetDeltaTime()
@@ -92,6 +92,7 @@ void Window::CreateCallbacks()
 {
 	glfwSetKeyCallback(m_window, HandleKeys);
 	glfwSetCursorPosCallback(m_window, HandleMouse);
+	glfwSetWindowSizeCallback(m_window, HandleResize);
 }
 
 void Window::HandleKeys(GLFWwindow* window, int key, int code, int action, int mode)
@@ -145,6 +146,10 @@ void Window::HandleMouse(GLFWwindow* window, double xPos, double yPos)
 
 }
 
+void Window::HandleResize(GLFWwindow* window, int width, int height) {
+	glViewport(0, 0, width, height);
+}
+
 void Window::Init() {
 
 	//INIT GLFW
@@ -175,8 +180,8 @@ void Window::Init() {
 	glfwGetFramebufferSize(m_window, &m_bufferWidth, &m_bufferHeight); //static frame buffer
 
 	// Set the current context
-	glViewport(0, 0, m_bufferWidth, m_bufferHeight);
 	glfwMakeContextCurrent(m_window);
+	glViewport(0, 0, m_bufferWidth, m_bufferHeight);
 
 	CreateCallbacks();
 
@@ -190,7 +195,6 @@ void Window::Init() {
 	else
 		std::cout << "[GLEW]: OK\n" << glGetString(GL_VERSION) << std::endl;
 
-	//CreateCallbacks();
 	glEnable(GL_DEPTH_TEST);
 	glfwSetWindowUserPointer(m_window, this);
 	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -198,7 +202,4 @@ void Window::Init() {
 	glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
-	//glEnable(GL_BLEND); //use alpha
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	
 }

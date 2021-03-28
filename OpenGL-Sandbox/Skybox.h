@@ -17,7 +17,7 @@ public:
 
 	Skybox();
 	Skybox(Texture* cubemap);
-	Skybox(std::vector<std::string> facesPaths); 
+
    ~Skybox();
 
    void Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
@@ -25,7 +25,6 @@ public:
 
 private:
 
-	void CreateCubemap(std::string imagePath[6]);
 	void CreateMesh();
 
 	Mesh* m_mesh;

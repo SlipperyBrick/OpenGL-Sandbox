@@ -15,24 +15,28 @@ uniform bool  u_BlurToggle;
 
 uniform float u_BlurStrength;
 
-uniform mat3 u_blur;
+float kernel[9] = float[](
+        0.0625,  0.125,  0.0625,
+        0.125,  0.25, 0.125,
+         0.0625,  0.125,  0.0625
+    );
 
 vec4 ImageKernal(vec2 texcoords) {
 
 	vec4 sum = vec4(0.f);
 	vec2 stepSize = u_BlurStrength / (u_Resolution);
 
-	sum += texture2D(u_Frame, vec2(texcoords.x - stepSize.x, texcoords.y - stepSize.y))   * u_blur[0][0];
-    sum += texture2D(u_Frame, vec2(texcoords.x, texcoords.y - stepSize.y))                * u_blur[0][1];
-    sum += texture2D(u_Frame, vec2(texcoords.x + stepSize.x, texcoords.y - stepSize.y))   * u_blur[0][2];
-
-	sum += texture2D(u_Frame, vec2(texcoords.x - stepSize.x, texcoords.y))                * u_blur[1][0];
-    sum += texture2D(u_Frame, vec2(texcoords.x, texcoords.y))                             * u_blur[1][1];
-    sum += texture2D(u_Frame, vec2(texcoords.x + stepSize.x, texcoords.y))                * u_blur[1][2];
-
-    sum += texture2D(u_Frame, vec2(texcoords.x - stepSize.x, texcoords.y + stepSize.y))   * u_blur[2][0];
-    sum += texture2D(u_Frame, vec2(texcoords.x, texcoords.y + stepSize.y))                * u_blur[2][1];
-    sum += texture2D(u_Frame, vec2(texcoords.x + stepSize.x, texcoords.y + stepSize.y))   * u_blur[2][2];
+	sum += texture2D(u_Frame, vec2(texcoords.x - stepSize.x, texcoords.y - stepSize.y))   * kernel[0];
+    sum += texture2D(u_Frame, vec2(texcoords.x, texcoords.y - stepSize.y))                * kernel[1];
+    sum += texture2D(u_Frame, vec2(texcoords.x + stepSize.x, texcoords.y - stepSize.y))   * kernel[2];
+																						
+	sum += texture2D(u_Frame, vec2(texcoords.x - stepSize.x, texcoords.y))                * kernel[3];
+    sum += texture2D(u_Frame, vec2(texcoords.x, texcoords.y))                             * kernel[4];
+    sum += texture2D(u_Frame, vec2(texcoords.x + stepSize.x, texcoords.y))                * kernel[5];
+																							
+    sum += texture2D(u_Frame, vec2(texcoords.x - stepSize.x, texcoords.y + stepSize.y))   * kernel[6];
+    sum += texture2D(u_Frame, vec2(texcoords.x, texcoords.y + stepSize.y))                * kernel[7];
+    sum += texture2D(u_Frame, vec2(texcoords.x + stepSize.x, texcoords.y + stepSize.y))   * kernel[8];
 
 	sum.a = 1.0;
 
@@ -55,26 +59,22 @@ vec2 Wobble() {
 
 void main() {
 
-	
 	vec2 texCoords;
-
+	
 	if(u_WobbleToggle) {
 		texCoords = Wobble();
 	} else {
 		texCoords = vs_texcoord;
 	}
-
+	
 	colour = texture(u_Frame, texCoords);
-
+	
 	if(u_BlurToggle){
 		colour = ImageKernal(texCoords);
 	}
-
+	
 	if(u_MonochromeToggle){
 		colour = Monochrome();
 	}
-
-
-
 
 }

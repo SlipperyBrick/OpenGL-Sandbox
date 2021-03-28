@@ -67,13 +67,20 @@ uniform samplerCube u_irradianceMap;
 uniform samplerCube u_prefilterMap;
 uniform sampler2D   u_brdfLUT;
 
-uniform bool u_usePRB;
-uniform bool u_test;
+//PBR values for when no textures are used
 uniform float u_metallic;  
 uniform float u_roughness;
 uniform float u_ao;
-uniform float u_heightScale;
+
+uniform bool u_usePRB;
+
 uniform int u_FilterLevel;
+uniform float u_Time;
+
+
+float Flicker(float intensity){
+    return fract(sin(u_Time * intensity));
+}
 
 vec3 sampleOffsetDirections[20] = vec3[] (
    vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
