@@ -8,6 +8,33 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+enum TextureUnits {
+
+	TU_IRRADIANCE, // Skybox 
+	TU_PREFILTER,
+	TU_BRDF,
+
+	TU_ALBEDO, // Material
+	TU_NORMAL,
+	TU_ROUGHNESS,
+	TU_AO,
+	TU_METALLIC,
+	TU_DISPLACEMENT,
+
+	TU_DIRECTIONAL_SHADOW_MAP, // Shadows
+
+	TU_POINT_SHADOW_MAP0,
+	TU_POINT_SHADOW_MAP1,
+	TU_POINT_SHADOW_MAP2,
+	TU_POINT_SHADOW_MAP3,
+
+	TU_SPOT_SHADOW_MAP0,
+	TU_SPOT_SHADOW_MAP1,
+	TU_SPOT_SHADOW_MAP2,
+	TU_SPOT_SHADOW_MAP3,
+
+};
+
 class Shader
 {
 public:

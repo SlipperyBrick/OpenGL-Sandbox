@@ -1,6 +1,5 @@
 #pragma once
 
-#include <vector>
 #include "PointLight.h"
 
 class SpotLight : public PointLight
@@ -13,6 +12,8 @@ public:
 		unsigned int shadowWidth, unsigned int shadowHeight,
 		float nearPlane, float farPlane);
 	~SpotLight();
+
+	void Bind(Shader* shader, int Index);
 
 	inline void SetDirection(glm::vec3 direction) { m_direction = direction; };
 	inline glm::vec3 GetDirection() { return m_direction; };

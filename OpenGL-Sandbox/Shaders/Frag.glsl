@@ -1,6 +1,7 @@
 #version 450 core                             
 
 const float PI = 3.14159265359;
+
 const int MAX_POINT_LIGHTS = 1;
 const int MAX_SPOT_LIGHTS = 1;
 
@@ -12,6 +13,11 @@ struct PointLight {
     float m_constant;
     float m_linear;
     float m_quadratic;
+
+    //shadow
+    samplerCube m_omniShadowMap;
+    float m_omniFarPlane;
+
 };
 
 struct SpotLight {
@@ -24,11 +30,8 @@ struct SpotLight {
 struct DirectionLight {
     vec4 m_colour;
     vec3 m_direction;
-};
-
-struct OmniShadowMap {
-    samplerCube m_shadowMap;
-    float m_farPlane;
+    int m_filterLevel;
+    sampler2D m_shadowMap;
 };
 
 out vec4 colour;                               
@@ -53,15 +56,6 @@ uniform sampler2D u_AOTexture;
 uniform sampler2D u_MetallicTexture;
 uniform sampler2D u_DisplacementTexture;
 
-//shadow maps
-uniform sampler2D u_directionalShadowMap;
-
-uniform samplerCube u_omniShadowMap;
-uniform float u_omniFarPlane;
-
-uniform samplerCube u_SpotLightShadowMap;
-uniform float u_SpotLightFarPlane;
-
 //skybox textures
 uniform samplerCube u_irradianceMap;
 uniform samplerCube u_prefilterMap;
@@ -73,14 +67,7 @@ uniform float u_roughness;
 uniform float u_ao;
 
 uniform bool u_usePRB;
-
-uniform int u_FilterLevel;
 uniform float u_Time;
-
-
-float Flicker(float intensity){
-    return fract(sin(u_Time * intensity));
-}
 
 vec3 sampleOffsetDirections[20] = vec3[] (
    vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
@@ -100,11 +87,11 @@ float CalcOmniShadowFactor(PointLight light, int index) {
     int samples = 10;
 
     float viewDirection = length(vs_cameraPosition - vs_position);
-    float radius = (1.f + (viewDirection/u_omniFarPlane)) / 25.f;
+    float radius = (1.f + (viewDirection / light.m_omniFarPlane)) / 25.f;
 
     for(int i = 0; i < samples; i++) {
-        float closestDepth = texture(u_omniShadowMap, lightDir + sampleOffsetDirections[i] * radius).r;
-        closestDepth *= u_omniFarPlane;
+        float closestDepth = texture(light.m_omniShadowMap, lightDir + sampleOffsetDirections[i] * radius).r;
+        closestDepth *= light.m_omniFarPlane;
         if(currDpeth - bias > closestDepth) {
             shadow += 1.f;
         }
@@ -125,11 +112,11 @@ float CalcOmniShadowFactor(SpotLight light, int index) {
     int samples = 25;
 
     float viewDirection = length(vs_cameraPosition - vs_position);
-    float radius = (1 + (viewDirection/u_SpotLightFarPlane)) / 25.f;
+    float radius = (1 + (viewDirection / light.base.m_omniFarPlane)) / 25.f;
 
     for(int i = 0; i < samples; i++) {
-        float closestDepth = texture(u_SpotLightShadowMap, lightDir + sampleOffsetDirections[i] * radius).r;
-        closestDepth *= u_SpotLightFarPlane;
+        float closestDepth = texture(light.base.m_omniShadowMap, lightDir + sampleOffsetDirections[i] * radius).r;
+        closestDepth *= light.base.m_omniFarPlane;
         if(currDpeth - bias > closestDepth) {
             shadow += 1.0f;
         }
@@ -156,18 +143,18 @@ float CalcDirectionalShadowFactor(DirectionLight light, vec3 normal) {
 	float shadow = 0.0;
 
     // PCF: percentage-closer filtering
-    vec2 texelSize = 1.0 / textureSize(u_directionalShadowMap, 0);
-    int FilterLevel = u_FilterLevel;
-    for(int i = -FilterLevel; i <= FilterLevel; i++)
+    vec2 texelSize = 1.0 / textureSize(light.m_shadowMap, 0);
+  
+    for(int i = -light.m_filterLevel; i <= light.m_filterLevel; i++)
     {
-        for(int j = -FilterLevel; j <= FilterLevel; j++)
+        for(int j = -light.m_filterLevel; j <= light.m_filterLevel; j++)
         {
-            float pcfDepth = texture(u_directionalShadowMap, projCoords.xy + vec2(i, j) * texelSize).r; 
+            float pcfDepth = texture(light.m_shadowMap, projCoords.xy + vec2(i, j) * texelSize).r; 
             shadow += projCoords.z - bias > pcfDepth ? 1.0 : 0.0;        
         }    
     }
     
-    shadow /= ((FilterLevel*2+1)*(FilterLevel*2+1)); 
+    shadow /= ((light.m_filterLevel*2+1)*(light.m_filterLevel*2+1)); 
 
 	return shadow;
 }
@@ -184,9 +171,12 @@ vec3 CalcDirLight(DirectionLight light, vec3 albedo, vec3 normal, float metallic
     vec3 reflectDir = reflect(lightDir, normal);
     float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.f);
 
+    vec3 F0 = vec3(0.04); 
+    F0 = mix(F0, albedo, metallic);
+
     // combine results
-    vec3 ambient  = light.m_colour.rgb * light.m_colour.w * albedo;
-    vec3 diffuse  = light.m_colour.rgb * light.m_colour.w * diff * albedo;
+    vec3 ambient  = light.m_colour.rgb * light.m_colour.w * F0;
+    vec3 diffuse  = light.m_colour.rgb * light.m_colour.w * diff * F0;
     vec3 specular = light.m_colour.rgb * light.m_colour.w * spec  * metallic;
 
     return  ((1.0 - CalcDirectionalShadowFactor(DirLight, normal)) * (diffuse + specular));
@@ -371,8 +361,8 @@ void main() {
 
     vec3  l_albedo    = vec3(1.0, 0.f, 0.f);
     vec3  l_normal    = vs_normal;
-    float l_metallic  = 0.6f;
-    float l_roughness = 0.6f;
+    float l_metallic  = 0.5f;
+    float l_roughness = 0.5f;
     float l_ao        = 1.f;
 
     if(u_usePRB) {

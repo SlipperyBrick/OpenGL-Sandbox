@@ -2,6 +2,8 @@
 
 #include <vector>
 
+#include <GL/glew.h>
+
 #include "Light.h"
 #include "Shader.h"
 #include "OmniShadowMap.h"
@@ -16,8 +18,9 @@ public:
         float nearPlane, float farPlane);
     ~PointLight();
 
-    std::vector<glm::mat4> CalculateLightTransform();
+    void Bind(Shader* shader, int index);
 
+    std::vector<glm::mat4> CalculateLightTransform();
     inline float GetFarPlane() { return m_farPlane; };
 
     void SetPosition(glm::vec3 position);
