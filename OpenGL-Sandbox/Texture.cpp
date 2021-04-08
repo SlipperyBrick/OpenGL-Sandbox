@@ -62,7 +62,7 @@ void Texture::Unbind()
 
 void Texture::LoadImageData()
 {
-	m_image2D = SOIL_load_image(m_path, &this->m_width, &this->m_height, NULL, SOIL_LOAD_RGBA);
+	m_image2D = stbi_load(m_path, &m_width, &m_height, &m_components, 0);
 }
 
 void Texture::LoadHDRIData()
@@ -71,8 +71,7 @@ void Texture::LoadHDRIData()
 	m_imageHDRI = stbi_loadf(m_path, &this->m_width, &this->m_height, &this->m_components, NULL);
 }
 
-void Texture::CreateDrawTexture(unsigned int width, unsigned int height)
-{
+void Texture::CreateDrawTexture(unsigned int width, unsigned int height) {
 	this->m_textureType = GL_TEXTURE_2D;
 
 	glGenTextures(1, &m_id);
@@ -89,6 +88,7 @@ void Texture::CreateDrawTexture(unsigned int width, unsigned int height)
 
 void Texture::CreateTexture2D()
 {
+	m_textureType = GL_TEXTURE_2D;
 	LoadImageData();
 	if (!m_image2D) {
 
@@ -98,22 +98,29 @@ void Texture::CreateTexture2D()
 			std::cout << "[ERROR]: Failed to load texture " << '"' << m_path << '"' << "\n";
 	}
 	else {
+
 		glGenTextures(1, &m_id);
-	    glBindTexture(GL_TEXTURE_2D, m_id);
-	    
-	    //https://learnopengl.com/Getting-started/Textures
-	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-	    
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, m_width, m_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, m_image2D);
+		glBindTexture(this->m_textureType, m_id);
 
-	    glGenerateMipmap(GL_TEXTURE_2D);	
+		GLenum format = NULL;
+		if (m_components == 1) {
+			format = GL_RED;
+		} else if (m_components == 3) {
+			format = GL_RGB;
+		} else if (m_components == 4) {
+			format = GL_RGBA;
+		}
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, m_image2D);
+		glGenerateMipmap(GL_TEXTURE_2D);
+		
+		glBindTexture(this->m_textureType, 0);
 	}
-
-	glBindTexture(GL_TEXTURE_2D, NULL);
-	SOIL_free_image_data(m_image2D);
+	stbi_image_free(m_image2D);
 }
 
 void Texture::LoadCubemap(const char* rightFace, const char* leftFace, 
@@ -133,18 +140,16 @@ void Texture::LoadCubemap(const char* rightFace, const char* leftFace,
 	glGenTextures(1, &m_id);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
 
-	int width, height;
-
 	for (size_t i = 0; i < 6; i++) {
 
-		unsigned char* image = SOIL_load_image(imagePaths[i].c_str(), &width, &height, NULL, SOIL_LOAD_RGB);
+		unsigned char* image = stbi_load(imagePaths[i].c_str(), &m_width, &m_height, &m_components, 0);
 
 		if (!image) {
 			std::cout << "[ERROR]: Failed to load cubemap " << '"' << imagePaths[i].c_str() << '"' << "\n";
 		}
 
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
-		SOIL_free_image_data(image);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, m_width, m_height, 0, GL_RGB, GL_UNSIGNED_BYTE, image);
+		stbi_image_free(image);
 
 	}
 
@@ -310,7 +315,7 @@ void Texture::CreatePrefilterMap(Texture* Cubemap) {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
 	for (unsigned int i = 0; i < 6; ++i)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 128, 128, 0, GL_RGB, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
 	}
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -335,8 +340,8 @@ void Texture::CreatePrefilterMap(Texture* Cubemap) {
 	for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
 	{
 		// reisze framebuffer according to mip-level size.
-		unsigned int mipWidth = 128 * std::pow(0.5, mip);
-		unsigned int mipHeight = 128 * std::pow(0.5, mip);
+		unsigned int mipWidth = 512 * std::pow(0.5, mip);
+		unsigned int mipHeight = 512 * std::pow(0.5, mip);
 		glBindRenderbuffer(GL_RENDERBUFFER, m_captureFBO);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
 		glViewport(0, 0, mipWidth, mipHeight);

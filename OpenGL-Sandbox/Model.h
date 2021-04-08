@@ -12,6 +12,7 @@
 
 #include "Mesh.h"
 #include "Texture.h"
+#include "Timer.hpp"
 
 
 class Model : public Entity

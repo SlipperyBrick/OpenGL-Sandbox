@@ -51,14 +51,21 @@ Texture Gold_Roughness("Textures/PBR/Gold (Au)_schvfgwp_Metal/Roughness_4K__schv
 Texture Gold_AO("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
 Texture Gold_Metallic("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
 
-Texture Rock_Albedo("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Albedo_4K__vclnajuew.jpg");
-Texture Rock_Normal("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Normal_4K__vclnajuew.jpg");
-Texture Rock_Roughness("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Roughness_4K__vclnajuew.jpg");
-Texture Rock_AO("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/AO_4K__vclnajuew.jpg");
-Texture Rock_Metallic("Textures/PBR/Icelandic Cracked Rock_vclnajuew_Surface/Metallic_4K__vclnajuew.jpg");
+Texture Marble_Albedo    ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Albedo.jpg");
+Texture Marble_Normal	 ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Normal.jpg");
+Texture Marble_Roughness ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Roughness.jpg");
+Texture Marble_AO		 ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_AO.jpg");
+Texture Marble_Metallic  ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Metalness.jpg");
 
-Material GoldMaterial(Gold_Albedo, Gold_Normal, Gold_Roughness, Gold_AO, Gold_Metallic, HeightMap);
-Material RockMaterial(Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO, Rock_Metallic, HeightMap);
+Texture Rock_Albedo   ("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Albedo.jpg");
+Texture Rock_Normal   ("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Normal.jpg");
+Texture Rock_Roughness("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Roughness.jpg");
+Texture Rock_AO	      ("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_AO.jpg");
+
+
+Material GoldMaterial(Gold_Albedo, Gold_Normal, Gold_Roughness, Gold_AO, Gold_Metallic);
+Material MarbleMaterial(Marble_Albedo, Marble_Normal, Marble_Roughness, Marble_AO);
+Material RockMaterial(Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO);
 
 DirectionalLight dirLight(1024, 1024, 1, { 1, 1, 1 }, 0.f, { 0.5, -1, 0 });
 std::vector<PointLight> pointlights(1);
@@ -70,16 +77,21 @@ Model quad;
 Model cube;
 
 //Uniforms 
-bool useTexture = true;
+bool useTexture = false;
 
 bool spotlightFlickering = false;		
 float spotlightFlickeringSpeed = 1.f;	
 
-bool u_MonochromeToggle = false;   //Move to framebuffer class? 
-bool u_WobbleToggle     = false;   //Move to framebuffer class? 
-bool u_BlurToggle       = false;   //Move to framebuffer class? 
-float u_BlurStrength = 1.f;		   //Move to framebuffer class? 
+bool u_MonochromeToggle = false; 
+bool u_WobbleToggle     = false; 
+bool u_BlurToggle       = false; 
+float u_BlurStrength = 1.f;		 
 float x = 0, y = 0;
+
+glm::vec3  albedo = glm::vec3(1.0, 0.f, 0.f);
+float metallic = 1.0f;
+float roughness = 1.0f;
+float ao = 1.0f;
 
 //Scenes
 void PBRScene(Shader* shader) {
@@ -131,12 +143,16 @@ void RenderScene(Shader* shader) {
 	shader->SetMat4f(camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()), "u_Projection", false);
 	shader->SetMat4f(camera.CalculateViewMatrix(), "u_View", false);
 
+	shader->SetVec3f(albedo, "albedo");
+	shader->Set1f(metallic, "metallic");
+	shader->Set1f(roughness, "roughness");
+	shader->Set1f(ao, "ao");
+
 	GoldMaterial.Bind();
 
 	shader->Set1i(useTexture, "u_usePRB");
 	shader->SetMat4f(cube.GetModel(), "u_Model", false);
 	
-	cube.SetRotation({ x , y, cube.GetRotation().z });
 	cube.Render();
 
 	RockMaterial.Bind();
@@ -149,8 +165,8 @@ void RenderScene(Shader* shader) {
 	quad.SetRotation({ 180.f, 0.f, 0.f });
 	quad.Render();
 
-	x += 5 * window.GetDeltaTime();
-	y += 5 * window.GetDeltaTime();
+	x += 10 * window.GetDeltaTime();
+	y += 10 * window.GetDeltaTime();
 
 }
 
@@ -203,7 +219,6 @@ void OmniShadowMapPass(PointLight* light) {
 }
 
 /* ~TODO~
-* Add Material system
 * Add Async 
 * Add System for swaping scene using GUI
 * Add System for drop and dropping textures with GUI
@@ -230,17 +245,22 @@ int main() {
 
 	HeightMap.CreateTexture2D();
 	
-	Rock_Albedo.CreateTexture2D();
-	Rock_Normal.CreateTexture2D();
-	Rock_Roughness.CreateTexture2D();
-	Rock_AO.CreateTexture2D();
-	Rock_Metallic.CreateTexture2D();
-
 	Gold_Albedo.CreateTexture2D();
 	Gold_Normal.CreateTexture2D();
 	Gold_Roughness.CreateTexture2D();
 	Gold_AO.CreateTexture2D();
 	Gold_Metallic.CreateTexture2D();
+
+	Marble_Albedo.CreateTexture2D();
+	Marble_Normal.CreateTexture2D();
+	Marble_Roughness.CreateTexture2D();
+	Marble_AO.CreateTexture2D();
+	Marble_Metallic.CreateTexture2D();
+
+	Rock_Albedo.CreateTexture2D();
+	Rock_Normal.CreateTexture2D();
+	Rock_Roughness.CreateTexture2D();
+	Rock_AO.CreateTexture2D();
 
 	quad.Load("Models/quad.fbx");
 	quad.Create();
@@ -248,8 +268,9 @@ int main() {
 	shpere.Load("Models/Sphere64.fbx");
 	shpere.Create();
 
-	cube.Load("Models/Cube.dae");
+	cube.Load("Models/monkey.fbx");
 	cube.Create();
+	cube.SetRotation({260, 0, 0});
 
 	shader.Bind();
 
@@ -281,8 +302,9 @@ int main() {
 		OmniShadowMapPass(&pointlights[0]);
 		OmniShadowMapPass(&spotLight);
 
+		glDisable(GL_DEPTH);
 		skybox.Render(camera.CalculateViewMatrix(), camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()));
-
+		glEnable(GL_DEPTH);
 		RenderScene(&shader);
 
 		renderTarget.Unbind();
@@ -309,6 +331,12 @@ int main() {
 
 			if (ImGui::CollapsingHeader("Texture Options")) {
 				ImGui::Checkbox("Use PBR Textures", &useTexture);
+				if (!useTexture) {
+					ImGui::ColorEdit3("Object Colour", (float*)&albedo);
+					ImGui::DragFloat("Metallic", &metallic, 0.01, 0.f, 1.f);
+					ImGui::DragFloat("AO", &ao, 0.01, 0.f, 1.f);
+					ImGui::DragFloat("Roughness", &roughness, 0.01, 0.f, 1.f);
+				}
 			}
 
 			if (ImGui::CollapsingHeader("PointLight Options")) {

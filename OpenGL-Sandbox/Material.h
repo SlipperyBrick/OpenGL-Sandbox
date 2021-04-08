@@ -6,6 +6,8 @@ class Material
 {
 public:
 	Material();
+	Material(Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic);
+	Material(Texture& albedo, Texture& normal, Texture& roughness, Texture& ao);
 	Material(Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic, Texture& displacement);
     ~Material();
 

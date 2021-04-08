@@ -69,6 +69,11 @@ uniform float u_ao;
 uniform bool u_usePRB;
 uniform float u_Time;
 
+uniform vec3 albedo;
+uniform float metallic;
+uniform float roughness;
+uniform float ao;
+
 vec3 sampleOffsetDirections[20] = vec3[] (
    vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
    vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
@@ -256,7 +261,7 @@ vec3 CalcPointLight(PointLight light, vec3 view, vec3 albedo, vec3 normal, float
         // Cook-Torrance BRDF
         float NDF = DistributionGGX(normal, H, roughness);   
         float G   = GeometrySmith(normal, view, L, roughness);    
-        vec3 F    = fresnelSchlick(max(dot(H, view), 0.0), F0);   //fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); //     
+        vec3 F    = fresnelSchlickRoughness(max(dot(H, view), 0.0), F0, roughness); //     
         
         vec3 nominator    = NDF * G * F;
         float denominator = 4 * max(dot(normal, view), 0.0) * max(dot(normal, L), 0.0) + 0.001; // 0.001 to prevent divide by zero.
@@ -279,7 +284,7 @@ vec3 CalcPointLight(PointLight light, vec3 view, vec3 albedo, vec3 normal, float
         return (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
 }
 
-vec3 CalcSpotLight(SpotLight light, int index, vec3 albedo, vec3 normal, float metallic, float roughness, float ao) {
+vec3 CalcSpotLight(SpotLight light, vec3 albedo, vec3 normal, float metallic, float roughness, float ao) {
     
     vec3 V = normalize(vs_cameraPosition - vs_position);
     vec3 lightDir = normalize(-light.base.m_position - vs_position);
@@ -315,7 +320,7 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
     // of 0.04 and if it's a metal, use the albedo color as F0 (metallic workflow)    
     vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
-    //(1 - CalcOmniShadowFactor(light, 0)) * 
+
     // reflectance equation
     vec3 Lo = vec3(0.0);
     for(int i = 0; i < MAX_POINT_LIGHTS; i++)  {
@@ -324,13 +329,7 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
     }   
     
      // ambient lighting (we now use IBL as the ambient term)
-     //vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness); 
-     //vec3 kD = 1.0 - kS;
-     //vec3 irradiance = texture(u_irradianceMap, N).rgb;
-     //vec3 diffuse    = irradiance * albedo;
-     //vec3 ambient    = (kD * diffuse) * ao; 
-    vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
-    vec3 kS = F;
+    vec3 kS = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
     vec3 kD = 1.0 - kS;
     kD *= 1.0 - metallic;	
     
@@ -340,12 +339,9 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
     const float MAX_REFLECTION_LOD = 4.0;
     vec3 prefilteredColor = textureLod(u_prefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;    
     vec2 brdf  = texture(u_brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
-    vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
+    vec3 specular = prefilteredColor * (kS * brdf.x + brdf.y);
 
     vec3 ambient = (kD * diffuse + specular) * ao;
-
-     
-
 
     vec3 color = ambient + Lo;
 
@@ -359,11 +355,11 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
 
 void main() {   
 
-    vec3  l_albedo    = vec3(1.0, 0.f, 0.f);
+    vec3  l_albedo    = albedo;
     vec3  l_normal    = vs_normal;
-    float l_metallic  = 0.5f;
-    float l_roughness = 0.5f;
-    float l_ao        = 1.f;
+    float l_metallic  = metallic;
+    float l_roughness = roughness;
+    float l_ao        = ao;
 
     if(u_usePRB) {
         l_albedo    = pow(texture(u_AlbedoTexture, vs_texcoord).rgb, vec3(2.2));
@@ -372,10 +368,11 @@ void main() {
         l_roughness = texture(u_RoughnessTexture, vs_texcoord).r;
         l_ao        = texture(u_AOTexture, vs_texcoord).r;
     }
+
      
-    colour =  vec4(CalcDirLight(DirLight, l_albedo, l_normal, l_metallic), 1.f)
-    + vec4(CalculatePBR(l_albedo, l_normal, l_metallic, l_roughness, l_ao), 1.f)
-    + vec4(CalcSpotLight(spotlight, 1, l_albedo, l_normal, l_metallic, l_roughness, l_ao), 1.f);
+    colour = vec4(CalculatePBR(l_albedo, l_normal, l_metallic, l_roughness, l_ao), 1.f)
+    + vec4(CalcSpotLight(spotlight, l_albedo, l_normal, l_metallic, l_roughness, l_ao), 1.f)
+    + vec4(CalcDirLight(DirLight, l_albedo, l_normal, l_metallic), 1.f);
     
        
 }

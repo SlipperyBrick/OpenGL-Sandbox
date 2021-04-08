@@ -95,8 +95,8 @@ void Window::CreateCallbacks()
 	glfwSetWindowSizeCallback(m_window, HandleResize);
 }
 
-void Window::HandleKeys(GLFWwindow* window, int key, int code, int action, int mode)
-{
+void Window::HandleKeys(GLFWwindow* window, int key, int code, int action, int mode) {
+
 	Window* l_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
@@ -128,8 +128,8 @@ void Window::HandleKeys(GLFWwindow* window, int key, int code, int action, int m
 
 }
 
-void Window::HandleMouse(GLFWwindow* window, double xPos, double yPos)
-{
+void Window::HandleMouse(GLFWwindow* window, double xPos, double yPos) {
+
 	Window* t_window = static_cast<Window*>(glfwGetWindowUserPointer(window));
 
 	if (t_window->m_mouseFirstMove) {

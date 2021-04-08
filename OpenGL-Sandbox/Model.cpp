@@ -14,8 +14,8 @@ void Model::Load(const char* filepath) {
 	const aiScene* scene = importer.ReadFile(filepath, 
 		aiProcess_Triangulate | 
 		aiProcess_FlipUVs | 
-		aiProcess_CalcTangentSpace | 
-		aiProcess_GenSmoothNormals | 
+		aiProcess_GenSmoothNormals |
+		aiProcess_CalcTangentSpace |
 		aiProcess_JoinIdenticalVertices);
 
 	if (!scene) {
@@ -72,21 +72,32 @@ void Model::LoadNode(aiNode* node, const aiScene* scene) {
 
 void Model::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 
+	m_vertices = std::vector<Vertex>(mesh->mNumVertices);
+
+	bool checkTangents = mesh->HasTangentsAndBitangents();
+
 	Vertex v;
+
 	for (size_t i = 0; i < mesh->mNumVertices; i++) {
-		
-		v.m_position =  glm::vec3(mesh->mVertices[i].x ,  mesh->mVertices[i].y,   mesh->mVertices[i].z);
+		v.m_position =  glm::vec3(mesh->mVertices[i].x,  mesh->mVertices[i].y,   mesh->mVertices[i].z);
 		v.m_normal =    glm::vec3(mesh->mNormals[i].x,    mesh->mNormals[i].y,    mesh->mNormals[i].z);
-		v.m_tangent =   glm::vec3(mesh->mTangents[i].x,   mesh->mTangents[i].y,   mesh->mTangents[i].z);
-		v.m_bitangent = glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+		if (checkTangents) {
+			v.m_tangent =   glm::vec3(mesh->mTangents[i].x,   mesh->mTangents[i].y,   mesh->mTangents[i].z);
+			v.m_bitangent = glm::vec3(mesh->mBitangents[i].x, mesh->mBitangents[i].y, mesh->mBitangents[i].z);
+		}
+		else {
+			v.m_tangent	  = glm::vec3(0.f);
+		    v.m_bitangent =	glm::vec3(0.f);
+		}
 	
 		if (mesh->mTextureCoords[0])
 			v.m_texcoords = glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y);
 		else 
 			v.m_texcoords = glm::vec2(0.f);
 
-		m_vertices.push_back(v);
+		m_vertices[i] = v;
 	}
+	
 
 	for (size_t i = 0; i < mesh->mNumFaces; i++) {
 
