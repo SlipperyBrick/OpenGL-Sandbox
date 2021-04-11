@@ -7,7 +7,6 @@ RenderTarget::RenderTarget(unsigned int width, unsigned int height) {
 	glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
 
 	// Generate and bind textures
-	m_Buffer = Texture();
 	m_Buffer.CreateDrawTexture(width, height);
 	m_Buffer.Bind(0);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, m_Buffer.GetTextureID(), 0);

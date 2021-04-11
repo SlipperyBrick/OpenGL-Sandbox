@@ -38,6 +38,31 @@ Material::~Material()
 {
 }
 
+void Material::Create()
+{
+	if(m_albedo->GetPath() != "")
+		m_albedo->CreateTexture2D();
+
+	if (m_normal->GetPath() != "")
+		m_normal->CreateTexture2D();
+
+	if (m_roughness->GetPath() != "")
+		m_roughness->CreateTexture2D();
+
+	if (m_ao->GetPath() != "")
+		m_ao->CreateTexture2D();
+
+	if (m_metallic->GetPath() != "")
+		m_metallic->CreateTexture2D();
+
+	if (m_displacement->GetPath() != std::string())
+		m_displacement->CreateTexture2D();
+}
+
+void Material::SetAlbedo(Texture albedo) {
+	m_albedo = &albedo;
+}
+
 void Material::Bind()
 {
     m_albedo->Bind(TU_ALBEDO);

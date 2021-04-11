@@ -3,6 +3,8 @@
 #include <iostream>
 #include <string>
 #include <assert.h>
+#include <future>
+#include <mutex>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -11,6 +13,7 @@
 
 #include "Shader.h"
 #include "Utility.h"
+#include "Timer.hpp"
 
 class Texture
 {
@@ -37,13 +40,16 @@ public:
 
 	void CreateHDRI();
 
-	void CreateCubemapFromHDRI(Texture HDRI);
+	void CreateCubemapFromHDRI(Texture& HDRI);
 	void CreateIrradianceTexture(Texture* Cubemap);
 	void CreatePrefilterMap(Texture* environmentMap);
 	void CreateBRDFLookUpTable();
 
 	unsigned int inline GetWidth()  { return m_width; };
 	unsigned int inline GetHeight() { return m_height; };
+	void inline SetPath(std::string path) { m_path = path.c_str(); };
+	void inline SetID(GLuint id) { m_id = id; };
+	std::string inline GetPath() { return std::string(m_path); };
 
 private:
 
@@ -56,5 +62,5 @@ private:
 	unsigned char* m_image2D;
 	float* m_imageHDRI;
 	unsigned int m_captureFBO, m_captureRBO;
-
+	std::future<bool> m_future;
 };

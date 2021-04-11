@@ -11,7 +11,16 @@ public:
 	Material(Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic, Texture& displacement);
     ~Material();
 
-   void Bind();
+	void Create();
+
+	void SetAlbedo(Texture albedo);
+	void SetNormal();
+	void SetRoughness();
+	void SetAO();
+	void SetMetallic();
+	void SetDisplacement();
+
+    void Bind();
 
 private:
 	Texture* m_albedo;

@@ -11,6 +11,12 @@ const glm::mat4 captureViews[] = {
    glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
 };
 
+std::mutex mu;
+bool load(Texture* t) {
+	t->LoadImageData();
+	return true;
+}
+
 Texture::Texture() {
 
 	m_id = NULL;
@@ -20,9 +26,10 @@ Texture::Texture() {
 	m_captureFBO = NULL;
 	m_captureRBO = NULL;
 	m_components = NULL;
-	m_path = nullptr;
+	m_path = "";
 	m_image2D = nullptr;
-	m_imageHDRI = nullptr;
+	m_imageHDRI = nullptr;	
+
 }
 
 Texture::Texture(const char* path) {
@@ -60,8 +67,7 @@ void Texture::Unbind()
 	glBindTexture(m_textureType, 0);
 }
 
-void Texture::LoadImageData()
-{
+void Texture::LoadImageData() {	
 	m_image2D = stbi_load(m_path, &m_width, &m_height, &m_components, 0);
 }
 
@@ -89,8 +95,9 @@ void Texture::CreateDrawTexture(unsigned int width, unsigned int height) {
 void Texture::CreateTexture2D()
 {
 	m_textureType = GL_TEXTURE_2D;
-	LoadImageData();
-	if (!m_image2D) {
+	m_future = std::async(std::launch::async, load, this);
+	
+	if (!m_future.get()) {
 
 		if(!m_path)
 			std::cout << "[ERROR]: No image path to load \n";
@@ -98,6 +105,7 @@ void Texture::CreateTexture2D()
 			std::cout << "[ERROR]: Failed to load texture " << '"' << m_path << '"' << "\n";
 	}
 	else {
+
 
 		glGenTextures(1, &m_id);
 		glBindTexture(this->m_textureType, m_id);
@@ -116,7 +124,7 @@ void Texture::CreateTexture2D()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexImage2D(GL_TEXTURE_2D, 0, format, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, m_image2D);
-		glGenerateMipmap(GL_TEXTURE_2D);
+		//glGenerateMipmap(GL_TEXTURE_2D);
 		
 		glBindTexture(this->m_textureType, 0);
 	}
@@ -194,7 +202,7 @@ void Texture::CreateHDRI() {
 
 }
 
-void Texture::CreateCubemapFromHDRI(Texture HDRI) {
+void Texture::CreateCubemapFromHDRI(Texture& HDRI) {
 
 	this->m_textureType = GL_TEXTURE_CUBE_MAP;
 

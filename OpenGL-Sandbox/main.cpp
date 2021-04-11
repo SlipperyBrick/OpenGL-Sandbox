@@ -1,5 +1,6 @@
 #include <vector>
 #include <future>
+#include <mutex>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -226,8 +227,9 @@ void OmniShadowMapPass(PointLight* light) {
 * Add Skelatal Animation Class
 */
 
-int main() {
 
+int main() {
+	std::cout << "[MAIN]: " << std::this_thread::get_id() << "\n";
 	GuiLayer GuiLayer(window.GetWindow());
 	Skybox skybox(&hdriCubemap);
 	pointlights[0] = PointLight({ 1, 1, 1, 0.f }, { 2.f, 5.0f, 0.0f }, 1024, 1024, 0.1, 100);
@@ -242,25 +244,14 @@ int main() {
 	irradianceCubemap.CreateIrradianceTexture(&hdriCubemap);
 	prefilterMap.CreatePrefilterMap(&hdriCubemap);
 	brdfLUTMap.CreateBRDFLookUpTable();
-
 	HeightMap.CreateTexture2D();
-	
-	Gold_Albedo.CreateTexture2D();
-	Gold_Normal.CreateTexture2D();
-	Gold_Roughness.CreateTexture2D();
-	Gold_AO.CreateTexture2D();
-	Gold_Metallic.CreateTexture2D();
 
-	Marble_Albedo.CreateTexture2D();
-	Marble_Normal.CreateTexture2D();
-	Marble_Roughness.CreateTexture2D();
-	Marble_AO.CreateTexture2D();
-	Marble_Metallic.CreateTexture2D();
+	{	Timer t(TIMER_ENUM::TIMER_SECONDS);
+		GoldMaterial.Create();
+		MarbleMaterial.Create();
+		RockMaterial.Create();
+	}
 
-	Rock_Albedo.CreateTexture2D();
-	Rock_Normal.CreateTexture2D();
-	Rock_Roughness.CreateTexture2D();
-	Rock_AO.CreateTexture2D();
 
 	quad.Load("Models/quad.fbx");
 	quad.Create();
@@ -294,7 +285,6 @@ int main() {
 
 	while (window.IsOpen()) {
 		
-
 		renderTarget.Bind(window);
 
 		//Shadow Passes
