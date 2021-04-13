@@ -11,12 +11,6 @@ const glm::mat4 captureViews[] = {
    glm::lookAt(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f,  0.0f, -1.0f), glm::vec3(0.0f, -1.0f,  0.0f))
 };
 
-std::mutex mu;
-bool load(Texture* t) {
-	t->LoadImageData();
-	return true;
-}
-
 Texture::Texture() {
 
 	m_id = NULL;
@@ -29,7 +23,7 @@ Texture::Texture() {
 	m_path = "";
 	m_image2D = nullptr;
 	m_imageHDRI = nullptr;	
-
+	m_format = NULL;
 }
 
 Texture::Texture(const char* path) {
@@ -42,8 +36,10 @@ Texture::Texture(const char* path) {
 	m_captureRBO = NULL;
 	m_components = NULL;
 	m_path = path;
-	m_image2D = nullptr;
+	m_image2D =  nullptr;
 	m_imageHDRI = nullptr;
+	m_format = NULL;
+	glGenTextures(1, &m_id);
 }
 
 Texture::~Texture() {
@@ -65,6 +61,39 @@ void Texture::Unbind()
 {
 	glActiveTexture(0);
 	glBindTexture(m_textureType, 0);
+}
+
+void Texture::UpdateData(unsigned char* data)
+{
+	if (m_id == 0)
+		glGenTextures(1, &m_id);
+
+	if (data) {
+		glBindTexture(this->m_textureType, m_id);
+
+		
+		switch (m_components) {
+			
+		case 1: m_format = GL_RED; break;
+		case 3: m_format = GL_RGB; break;
+		case 4: m_format = GL_RGBA; break;
+			
+		default: break;
+		}
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexImage2D(GL_TEXTURE_2D, 0, m_format, m_width, m_height, 0, m_format, GL_UNSIGNED_BYTE, data);
+		//glGenerateMipmap(GL_TEXTURE_2D);
+
+		glBindTexture(this->m_textureType, 0);
+	}
+	else {
+		printf("[ERROR]: Failed to update texture\n");
+	}
+
 }
 
 void Texture::LoadImageData() {	
@@ -95,9 +124,9 @@ void Texture::CreateDrawTexture(unsigned int width, unsigned int height) {
 void Texture::CreateTexture2D()
 {
 	m_textureType = GL_TEXTURE_2D;
-	m_future = std::async(std::launch::async, load, this);
+	LoadImageData();
 	
-	if (!m_future.get()) {
+	if (!m_image2D) {
 
 		if(!m_path)
 			std::cout << "[ERROR]: No image path to load \n";
@@ -106,8 +135,9 @@ void Texture::CreateTexture2D()
 	}
 	else {
 
+		if(m_id == 0)
+			glGenTextures(1, &m_id);
 
-		glGenTextures(1, &m_id);
 		glBindTexture(this->m_textureType, m_id);
 
 		GLenum format = NULL;

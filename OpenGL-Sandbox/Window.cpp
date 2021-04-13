@@ -171,6 +171,7 @@ void Window::Init() {
 
 	// Create the window
 	m_window = glfwCreateWindow(m_width, m_height, m_title.c_str(), NULL, NULL);
+	
 	if (!m_window)
 	{
 		printf("[ERROR]: GLFW window didn't init..");

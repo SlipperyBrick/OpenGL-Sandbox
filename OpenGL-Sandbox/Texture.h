@@ -26,6 +26,7 @@ public:
 	void Bind(const GLint textureUnit);
 	void Unbind();
 
+	void UpdateData(unsigned char* data);
 
 	void LoadImageData();
 	void LoadHDRIData();
@@ -45,10 +46,22 @@ public:
 	void CreatePrefilterMap(Texture* environmentMap);
 	void CreateBRDFLookUpTable();
 
-	unsigned int inline GetWidth()  { return m_width; };
-	unsigned int inline GetHeight() { return m_height; };
 	void inline SetPath(std::string path) { m_path = path.c_str(); };
 	void inline SetID(GLuint id) { m_id = id; };
+
+	inline void SetData2D(unsigned char* data) { m_image2D = data; };
+	inline unsigned char* GetData2DPtr() { return m_image2D; };
+
+	inline unsigned int GetWidth()  { return m_width; };
+	inline int*  GetWidthPtr() { return &m_width; };
+	
+	inline unsigned int GetHeight() { return m_height; };
+	inline int* GetHeightPtr() { return &m_height; };
+
+	inline unsigned int GetComponents() { return m_components; };
+	inline int* GetComponentsPtr() { return &m_components; };
+
+	void SetPath(const char* path) { m_path = path; };
 	std::string inline GetPath() { return std::string(m_path); };
 
 private:
@@ -58,6 +71,7 @@ private:
 	int m_height;
 	int m_components;
 	int m_textureType;
+	GLenum m_format;
 	const char* m_path;
 	unsigned char* m_image2D;
 	float* m_imageHDRI;

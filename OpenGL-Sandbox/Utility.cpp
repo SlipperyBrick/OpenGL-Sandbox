@@ -143,3 +143,8 @@ void renderQuad()
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 	glBindVertexArray(0);
 }
+
+void Sleep(int seconds)
+{
+	std::this_thread::sleep_for(std::chrono::seconds(seconds));
+}

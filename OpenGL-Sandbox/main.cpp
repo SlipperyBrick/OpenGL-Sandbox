@@ -44,8 +44,6 @@ Texture irradianceCubemap;
 Texture prefilterMap;
 Texture brdfLUTMap;
 
-Texture HeightMap("Textures/parallax_mapping_height_map.png");
-
 Texture Gold_Albedo("Textures/PBR/Gold (Au)_schvfgwp_Metal/Albedo_4K__schvfgwp.jpg");
 Texture Gold_Normal("Textures/PBR/Gold (Au)_schvfgwp_Metal/Normal_4K__schvfgwp.jpg");
 Texture Gold_Roughness("Textures/PBR/Gold (Au)_schvfgwp_Metal/Roughness_4K__schvfgwp.jpg");
@@ -156,7 +154,7 @@ void RenderScene(Shader* shader) {
 	
 	cube.Render();
 
-	RockMaterial.Bind();
+	MarbleMaterial.Bind();
 
 	shader->Set1i(1, "u_usePRB");
 	shader->SetMat4f(quad.GetModel(), "u_Model", false);
@@ -227,9 +225,34 @@ void OmniShadowMapPass(PointLight* light) {
 * Add Skelatal Animation Class
 */
 
+struct TexData
+{
+	unsigned char* data;
+	std::string path;
+	Texture*  texture;
+};
+
+std::vector<std::future<void>> futures;
+std::vector<TexData> textureData;
+std::vector<Texture*> textures;
+
+std::mutex mu;
+void LoadTexture(std::vector<TexData> *data, Texture* tex) {
+
+	TexData d;
+	d.texture = tex;
+	d.path = tex->GetPath();
+	d.data = stbi_load(d.path.c_str(), tex->GetWidthPtr(), tex->GetHeightPtr(), tex->GetComponentsPtr(), 0);
+
+	std::lock_guard<std::mutex> lock(mu);
+	data->push_back(d);
+
+}
 
 int main() {
+
 	std::cout << "[MAIN]: " << std::this_thread::get_id() << "\n";
+
 	GuiLayer GuiLayer(window.GetWindow());
 	Skybox skybox(&hdriCubemap);
 	pointlights[0] = PointLight({ 1, 1, 1, 0.f }, { 2.f, 5.0f, 0.0f }, 1024, 1024, 0.1, 100);
@@ -244,14 +267,22 @@ int main() {
 	irradianceCubemap.CreateIrradianceTexture(&hdriCubemap);
 	prefilterMap.CreatePrefilterMap(&hdriCubemap);
 	brdfLUTMap.CreateBRDFLookUpTable();
-	HeightMap.CreateTexture2D();
 
-	{	Timer t(TIMER_ENUM::TIMER_SECONDS);
-		GoldMaterial.Create();
-		MarbleMaterial.Create();
-		RockMaterial.Create();
-	}
+	textures.push_back(&Gold_Albedo);
+	textures.push_back(&Gold_Normal);
+	textures.push_back(&Gold_Roughness);
+	textures.push_back(&Gold_AO);
+	textures.push_back(&Gold_Metallic);
 
+	textures.push_back(&Marble_Albedo);
+	textures.push_back(&Marble_Normal);
+	textures.push_back(&Marble_Roughness);
+	textures.push_back(&Marble_AO);
+	textures.push_back(&Marble_Metallic);
+
+	//GoldMaterial.Create();
+	//MarbleMaterial.Create();
+	//RockMaterial.Create();
 
 	quad.Load("Models/quad.fbx");
 	quad.Create();
@@ -283,8 +314,22 @@ int main() {
 
 	shader.Unbind();
 
+
+	for (size_t i = 0; i < textures.size(); i++)
+	{
+		futures.push_back(std::async(std::launch::async, LoadTexture, &textureData, textures[i]));
+	}
+
+
+	bool toggle = false;
+	int iter = 0;
 	while (window.IsOpen()) {
 		
+	if (textureData.size() == textures.size() && iter < textures.size()) {
+		textureData[iter].texture->UpdateData(textureData[iter].data);
+		iter++;
+	}
+
 		renderTarget.Bind(window);
 
 		//Shadow Passes
