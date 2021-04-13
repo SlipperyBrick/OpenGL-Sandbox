@@ -26,14 +26,12 @@ public:
 	void Bind(const GLint textureUnit);
 	void Unbind();
 
-	void UpdateData(unsigned char* data);
+	void CreateTexture2D();
 
 	void LoadImageData();
 	void LoadHDRIData();
 
 	void CreateDrawTexture(unsigned int width, unsigned int height);
-
-	void CreateTexture2D();
 
 	void LoadCubemap(const char* rightFace, const char* leftFace,
 		             const char* topFace, const char* bottomFace,
@@ -49,8 +47,8 @@ public:
 	void inline SetPath(std::string path) { m_path = path.c_str(); };
 	void inline SetID(GLuint id) { m_id = id; };
 
-	inline void SetData2D(unsigned char* data) { m_image2D = data; };
-	inline unsigned char* GetData2DPtr() { return m_image2D; };
+	inline void SetData2D(unsigned char* data) { m_data2D = data; };
+	inline unsigned char* GetData2DPtr() { return m_data2D; };
 
 	inline unsigned int GetWidth()  { return m_width; };
 	inline int*  GetWidthPtr() { return &m_width; };
@@ -60,6 +58,9 @@ public:
 
 	inline unsigned int GetComponents() { return m_components; };
 	inline int* GetComponentsPtr() { return &m_components; };
+
+	inline void SetFormat(GLenum format) { m_format = format; };
+	inline GLenum GetFormat() { return m_format; };
 
 	void SetPath(const char* path) { m_path = path; };
 	std::string inline GetPath() { return std::string(m_path); };
@@ -73,8 +74,7 @@ private:
 	int m_textureType;
 	GLenum m_format;
 	const char* m_path;
-	unsigned char* m_image2D;
+	unsigned char* m_data2D;
 	float* m_imageHDRI;
 	unsigned int m_captureFBO, m_captureRBO;
-	std::future<bool> m_future;
 };

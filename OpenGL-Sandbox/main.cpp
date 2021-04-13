@@ -23,6 +23,7 @@
 #include "RenderTarget.h"
 #include "Random.hpp"
 #include "Material.h"
+#include "ResourceManager.h"
 
 Window window("Window", true, 1460, 768);
 
@@ -60,11 +61,13 @@ Texture Rock_Albedo   ("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Albedo.jp
 Texture Rock_Normal   ("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Normal.jpg");
 Texture Rock_Roughness("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Roughness.jpg");
 Texture Rock_AO	      ("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_AO.jpg");
+Texture Rock_Metallic("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Displacement.jpg");
+Texture Rock_Displacment("Textures/PBR/marble_polished_vdkgdbpv/vdljfeglw_4K_Displacement.jpg");
 
 
 Material GoldMaterial(Gold_Albedo, Gold_Normal, Gold_Roughness, Gold_AO, Gold_Metallic);
 Material MarbleMaterial(Marble_Albedo, Marble_Normal, Marble_Roughness, Marble_AO);
-Material RockMaterial(Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO);
+Material RockMaterial(Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO, Rock_Metallic, Rock_Displacment);
 
 DirectionalLight dirLight(1024, 1024, 1, { 1, 1, 1 }, 0.f, { 0.5, -1, 0 });
 std::vector<PointLight> pointlights(1);
@@ -154,7 +157,7 @@ void RenderScene(Shader* shader) {
 	
 	cube.Render();
 
-	MarbleMaterial.Bind();
+	RockMaterial.Bind();
 
 	shader->Set1i(1, "u_usePRB");
 	shader->SetMat4f(quad.GetModel(), "u_Model", false);
@@ -217,37 +220,12 @@ void OmniShadowMapPass(PointLight* light) {
 
 }
 
-/* ~TODO~
-* Add Async 
+/* ~TODO~ 
 * Add System for swaping scene using GUI
 * Add System for drop and dropping textures with GUI
 * Add Displacement Mapping
 * Add Skelatal Animation Class
 */
-
-struct TexData
-{
-	unsigned char* data;
-	std::string path;
-	Texture*  texture;
-};
-
-std::vector<std::future<void>> futures;
-std::vector<TexData> textureData;
-std::vector<Texture*> textures;
-
-std::mutex mu;
-void LoadTexture(std::vector<TexData> *data, Texture* tex) {
-
-	TexData d;
-	d.texture = tex;
-	d.path = tex->GetPath();
-	d.data = stbi_load(d.path.c_str(), tex->GetWidthPtr(), tex->GetHeightPtr(), tex->GetComponentsPtr(), 0);
-
-	std::lock_guard<std::mutex> lock(mu);
-	data->push_back(d);
-
-}
 
 int main() {
 
@@ -255,6 +233,7 @@ int main() {
 
 	GuiLayer GuiLayer(window.GetWindow());
 	Skybox skybox(&hdriCubemap);
+	ResourceManager Manager;
 	pointlights[0] = PointLight({ 1, 1, 1, 0.f }, { 2.f, 5.0f, 0.0f }, 1024, 1024, 0.1, 100);
 
 	shader.CreateFromFile("Shaders/Vertex.glsl", "Shaders/Frag.glsl");
@@ -262,27 +241,19 @@ int main() {
 	omniShadowShader.CreateFromFile("Shaders/OmniShadowMapShaderVert.glsl", "Shaders/OmniShadowMapShaderGeom.glsl", "Shaders/OmniShadowMapShaderFrag.glsl");
 	QuadShader.CreateFromFile("Shaders/QuadShaderVert.glsl", "Shaders/QuadShaderFrag.glsl");
 
+#pragma region LoadTextures
+
 	HDRI.CreateHDRI();
 	hdriCubemap.CreateCubemapFromHDRI(HDRI);
 	irradianceCubemap.CreateIrradianceTexture(&hdriCubemap);
 	prefilterMap.CreatePrefilterMap(&hdriCubemap);
 	brdfLUTMap.CreateBRDFLookUpTable();
 
-	textures.push_back(&Gold_Albedo);
-	textures.push_back(&Gold_Normal);
-	textures.push_back(&Gold_Roughness);
-	textures.push_back(&Gold_AO);
-	textures.push_back(&Gold_Metallic);
+	Manager.Load(&GoldMaterial);
+	Manager.Load(&MarbleMaterial);
+	Manager.Load(&RockMaterial);
 
-	textures.push_back(&Marble_Albedo);
-	textures.push_back(&Marble_Normal);
-	textures.push_back(&Marble_Roughness);
-	textures.push_back(&Marble_AO);
-	textures.push_back(&Marble_Metallic);
-
-	//GoldMaterial.Create();
-	//MarbleMaterial.Create();
-	//RockMaterial.Create();
+#pragma endregion
 
 	quad.Load("Models/quad.fbx");
 	quad.Create();
@@ -314,22 +285,8 @@ int main() {
 
 	shader.Unbind();
 
-
-	for (size_t i = 0; i < textures.size(); i++)
-	{
-		futures.push_back(std::async(std::launch::async, LoadTexture, &textureData, textures[i]));
-	}
-
-
-	bool toggle = false;
-	int iter = 0;
 	while (window.IsOpen()) {
 		
-	if (textureData.size() == textures.size() && iter < textures.size()) {
-		textureData[iter].texture->UpdateData(textureData[iter].data);
-		iter++;
-	}
-
 		renderTarget.Bind(window);
 
 		//Shadow Passes
@@ -423,9 +380,9 @@ int main() {
 
 		GuiLayer.End();
 		window.Clear();
+		Manager.Update();
 
 	}
-
 
 	return 0;
 

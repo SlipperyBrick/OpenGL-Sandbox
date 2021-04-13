@@ -364,7 +364,7 @@ void main() {
     if(u_usePRB) {
         l_albedo    = pow(texture(u_AlbedoTexture, vs_texcoord).rgb, vec3(2.2));
         l_normal    = GetNormalFromMap();  
-        l_metallic  = texture(u_MetallicTexture, vs_texcoord).r;
+        l_metallic = texture(u_MetallicTexture, vs_texcoord).r;
         l_roughness = texture(u_RoughnessTexture, vs_texcoord).r;
         l_ao        = texture(u_AOTexture, vs_texcoord).r;
     }

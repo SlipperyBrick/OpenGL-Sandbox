@@ -21,9 +21,10 @@ Texture::Texture() {
 	m_captureRBO = NULL;
 	m_components = NULL;
 	m_path = "";
-	m_image2D = nullptr;
+	m_data2D = nullptr;
 	m_imageHDRI = nullptr;	
 	m_format = NULL;
+	glGenTextures(1, &m_id);
 }
 
 Texture::Texture(const char* path) {
@@ -36,7 +37,7 @@ Texture::Texture(const char* path) {
 	m_captureRBO = NULL;
 	m_components = NULL;
 	m_path = path;
-	m_image2D =  nullptr;
+	m_data2D =  nullptr;
 	m_imageHDRI = nullptr;
 	m_format = NULL;
 	glGenTextures(1, &m_id);
@@ -63,41 +64,39 @@ void Texture::Unbind()
 	glBindTexture(m_textureType, 0);
 }
 
-void Texture::UpdateData(unsigned char* data)
+void Texture::CreateTexture2D()
 {
 	if (m_id == 0)
 		glGenTextures(1, &m_id);
 
-	if (data) {
-		glBindTexture(this->m_textureType, m_id);
+	if (m_data2D) {
 
-		
-		switch (m_components) {
-			
-		case 1: m_format = GL_RED; break;
-		case 3: m_format = GL_RGB; break;
-		case 4: m_format = GL_RGBA; break;
-			
-		default: break;
-		}
+		m_textureType = GL_TEXTURE_2D;
+		glBindTexture(this->m_textureType, m_id);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, m_format, m_width, m_height, 0, m_format, GL_UNSIGNED_BYTE, data);
+		glTexImage2D(GL_TEXTURE_2D, 0, m_format, m_width, m_height, 0, m_format, GL_UNSIGNED_BYTE, m_data2D);
 		//glGenerateMipmap(GL_TEXTURE_2D);
 
 		glBindTexture(this->m_textureType, 0);
-	}
-	else {
-		printf("[ERROR]: Failed to update texture\n");
+		delete m_data2D;
+
+	} else {
+		
+		if (!m_path) {
+			printf("[ERROR]: No path to load texture. \n");
+		} 
+
+		printf("[ERROR]: No texture data. \n");
 	}
 
 }
 
 void Texture::LoadImageData() {	
-	m_image2D = stbi_load(m_path, &m_width, &m_height, &m_components, 0);
+	m_data2D = stbi_load(m_path, &m_width, &m_height, &m_components, 0);
 }
 
 void Texture::LoadHDRIData()
@@ -119,46 +118,6 @@ void Texture::CreateDrawTexture(unsigned int width, unsigned int height) {
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void Texture::CreateTexture2D()
-{
-	m_textureType = GL_TEXTURE_2D;
-	LoadImageData();
-	
-	if (!m_image2D) {
-
-		if(!m_path)
-			std::cout << "[ERROR]: No image path to load \n";
-		else
-			std::cout << "[ERROR]: Failed to load texture " << '"' << m_path << '"' << "\n";
-	}
-	else {
-
-		if(m_id == 0)
-			glGenTextures(1, &m_id);
-
-		glBindTexture(this->m_textureType, m_id);
-
-		GLenum format = NULL;
-		if (m_components == 1) {
-			format = GL_RED;
-		} else if (m_components == 3) {
-			format = GL_RGB;
-		} else if (m_components == 4) {
-			format = GL_RGBA;
-		}
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexImage2D(GL_TEXTURE_2D, 0, format, m_width, m_height, 0, format, GL_UNSIGNED_BYTE, m_image2D);
-		//glGenerateMipmap(GL_TEXTURE_2D);
-		
-		glBindTexture(this->m_textureType, 0);
-	}
-	stbi_image_free(m_image2D);
 }
 
 void Texture::LoadCubemap(const char* rightFace, const char* leftFace, 
