@@ -161,7 +161,7 @@ void Texture::LoadCubemap(const char* rightFace, const char* leftFace,
 }
 
 void Texture::CreateHDRI() {
-
+	
 	m_textureType = GL_TEXTURE_2D;
 	
 	this->LoadHDRIData();
@@ -227,15 +227,15 @@ void Texture::CreateCubemapFromHDRI(Texture& HDRI) {
 	// convert HDR equirectangular environment map to cubemap equivalent
 	HDRI.Bind(0);
 	equirectangularToCubemapShader.Bind();
-	equirectangularToCubemapShader.Set1i(0, "u_equirectangularMap");
-	equirectangularToCubemapShader.SetMat4f(captureProjection, "u_projection", false);
+	equirectangularToCubemapShader.Set1i("u_equirectangularMap", 0);
+	equirectangularToCubemapShader.SetMat4f("u_projection", captureProjection, false);
 
 	glViewport(0, 0, 512, 512);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_captureFBO);
 	for (unsigned int i = 0; i < 6; i++)
 	{
 	
-		equirectangularToCubemapShader.SetMat4f(captureViews[i], "u_view", false);
+		equirectangularToCubemapShader.SetMat4f("u_view", captureViews[i],  false);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, this->m_id, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -276,14 +276,14 @@ void Texture::CreateIrradianceTexture(Texture* Cubemap) {
 
 	Cubemap->Bind(0);
 	IrradianceConvolutionShader.Bind();
-	IrradianceConvolutionShader.Set1i(0, "u_environmentMap");
-	IrradianceConvolutionShader.SetMat4f(captureProjection, "u_projectionMatrix", false);
+	IrradianceConvolutionShader.Set1i("u_environmentMap", 0);
+	IrradianceConvolutionShader.SetMat4f("u_projectionMatrix", captureProjection, false);
 
 	glViewport(0, 0, 32, 32);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_captureFBO);
 	for (unsigned int i = 0; i < 6; i++)
 	{
-		IrradianceConvolutionShader.SetMat4f(captureViews[i], "u_viewMatrix", false);
+		IrradianceConvolutionShader.SetMat4f("u_viewMatrix", captureViews[i], false);
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_id, 0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -324,8 +324,8 @@ void Texture::CreatePrefilterMap(Texture* Cubemap) {
 	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 	prefilterShader.Bind();
-	prefilterShader.Set1i(0, "u_environmentMap");
-	prefilterShader.SetMat4f(captureProjection, "u_projectionMatrix", false);
+	prefilterShader.Set1i("u_environmentMap", 0);
+	prefilterShader.SetMat4f("u_projectionMatrix", captureProjection, false);
 	Cubemap->Bind(0);
 
 	glGenFramebuffers(1, &m_captureFBO);
@@ -344,10 +344,10 @@ void Texture::CreatePrefilterMap(Texture* Cubemap) {
 		glViewport(0, 0, mipWidth, mipHeight);
 
 		float roughness = (float)mip / (float)(maxMipLevels - 1);
-		prefilterShader.Set1f(roughness, "u_roughness");
+		prefilterShader.Set1f("u_roughness", roughness);
 		for (unsigned int i = 0; i < 6; ++i)
 		{
-			prefilterShader.SetMat4f(captureViews[i], "u_viewMatrix", false);
+			prefilterShader.SetMat4f("u_viewMatrix", captureViews[i], false);
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, m_id, mip);
 
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

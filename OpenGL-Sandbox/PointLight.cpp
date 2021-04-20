@@ -35,16 +35,16 @@ void PointLight::Bind(Shader* shader, int index)
 {
 
     std::string pos = "pointLight[" + std::to_string(index) + "].m_position";
-    shader->SetVec3f(GetPosition(), pos.c_str());
+    shader->SetVec3f(pos.c_str(), (glm::vec3&)GetPosition());
 
     std::string col = "pointLight[" + std::to_string(index) + "].m_colour";
-    shader->SetVec4f(glm::vec4(GetColour(), GetIntensity()), col.c_str());
+    shader->SetVec4f(col.c_str(), glm::vec4(GetColour(), GetIntensity()));
 
     std::string shadowMap = "pointLight[" + std::to_string(index) + "].m_omniShadowMap";
-    shader->Set1i(TU_POINT_SHADOW_MAP0 + index, shadowMap.c_str());
+    shader->Set1i(shadowMap.c_str(), TU_POINT_SHADOW_MAP0 + index);
 
     std::string shadowFarPlane = "pointLight[" + std::to_string(index) + "].m_omniFarPlane";
-    shader->Set1f(GetFarPlane(), shadowFarPlane.c_str());
+    shader->Set1f(shadowFarPlane.c_str(), GetFarPlane());
 
     GetShadowMapPtr()->BindTexture(TU_POINT_SHADOW_MAP0 + index);
 

@@ -15,20 +15,16 @@ SpotLight::~SpotLight()
 
 void SpotLight::Bind(Shader* shader, int Index) {
 
-	shader->SetVec3f(GetPosition(), "spotlight.base.m_position");
-	shader->SetVec3f(GetDirection(), "spotlight.m_direction");
-	shader->SetVec4f(glm::vec4(GetColour(), GetIntensity()), "spotlight.base.m_colour");
+	shader->SetVec3f("spotlight.base.m_position", (glm::vec3&)GetPosition());
+	shader->SetVec3f("spotlight.m_direction", (glm::vec3&)GetDirection());
+	shader->SetVec4f("spotlight.base.m_colour", glm::vec4(GetColour(), GetIntensity()));
 
-	shader->Set1f(GetConstant(), "spotlight.base.m_constant");
-	shader->Set1f(GetLinear(), "spotlight.base.m_linear");
-	shader->Set1f(GetQuadratic(), "spotlight.base.m_quadratic");
-
-	shader->Set1f(GetOutterCutOff(), "spotlight.m_outterEdge");
-	shader->Set1f(GetInnerCutOff(), "spotlight.m_innerEdge");
+	shader->Set1f("spotlight.m_outterEdge", GetOutterCutOff());
+	shader->Set1f("spotlight.m_innerEdge", GetInnerCutOff());
 
 	GetShadowMapPtr()->BindTexture(TU_SPOT_SHADOW_MAP0);
-	shader->Set1i(TU_SPOT_SHADOW_MAP0, "spotlight.base.m_omniShadowMap");
-	shader->Set1f(GetFarPlane(), "spotlight.base.m_omniFarPlane");
+	shader->Set1i("spotlight.base.m_omniShadowMap", TU_SPOT_SHADOW_MAP0);
+	shader->Set1f("spotlight.base.m_omniFarPlane", GetFarPlane());
 
 }
 

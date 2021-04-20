@@ -28,12 +28,11 @@ Skybox::~Skybox()
 {
 }
 
-void Skybox::Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix)
-{
+void Skybox::Render(Camera* camera) {
 	m_shader->Bind();
 
-	m_shader->SetMat4f(viewMatrix, "u_viewMatrix", false);
-	m_shader->SetMat4f(projectionMatrix, "u_projectionMatrix", false);
+	m_shader->SetMat4f("u_viewMatrix", camera->GetViewMatrix(), false);
+	m_shader->SetMat4f("u_projectionMatrix", camera->GetProjectionMatrix(),  false);
 
 	m_cubemap->Bind(0);
 

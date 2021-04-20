@@ -25,21 +25,26 @@
 #include "Material.h"
 #include "ResourceManager.h"
 
-Window window("Window", true, 1460, 768);
-
 Random Random::s_Instance;
 
-Camera camera(glm::vec3(0.f, 2.f, 10.f), glm::vec3(0, 1, 0), 0, 0, 5, 110, 90.f);
 
+#pragma region Create Window & Camera
+Window window("Window", false, 1460, 768);
+Camera camera(&window, glm::vec3(0.f, 2.f, 10.f), glm::vec3(0, 1, 0), 0, 0, 5, 110, 90.f);
+#pragma endregion
+
+#pragma region Create Shader
 Shader shader;
 Shader dirShadowShader;
 Shader omniShadowShader;
-
-Shader QuadShader;
+Shader quadShader;
+#pragma endregion
 
 RenderTarget renderTarget(window.GetBufferWidth(), window.GetBufferHeight());
 
-Texture HDRI("Textures/HDRIs/herkulessaulen_4k.hdr");
+#pragma region Create Texture & Material
+
+Texture HDRI("Textures/HDRIs/pink_sunrise_4k.hdr");
 Texture hdriCubemap;
 Texture irradianceCubemap;
 Texture prefilterMap;
@@ -51,83 +56,117 @@ Texture Gold_Roughness("Textures/PBR/Gold (Au)_schvfgwp_Metal/Roughness_4K__schv
 Texture Gold_AO("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
 Texture Gold_Metallic("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
 
-Texture Marble_Albedo    ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Albedo.jpg");
-Texture Marble_Normal	 ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Normal.jpg");
-Texture Marble_Roughness ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Roughness.jpg");
-Texture Marble_AO		 ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_AO.jpg");
-Texture Marble_Metallic  ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Metalness.jpg");
+Texture Marble_Albedo   ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Albedo.jpg");
+Texture Marble_Normal   ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Normal.jpg");
+Texture Marble_Roughness("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Roughness.jpg");
+Texture Marble_AO		("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_AO.jpg");
+Texture Marble_Metallic ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Metalness.jpg");
 
-Texture Rock_Albedo   ("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Albedo.jpg");
-Texture Rock_Normal   ("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Normal.jpg");
+Texture Rock_Albedo("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Albedo.jpg");
+Texture Rock_Normal("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Normal.jpg");
 Texture Rock_Roughness("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Roughness.jpg");
-Texture Rock_AO	      ("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_AO.jpg");
+Texture Rock_AO("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_AO.jpg");
 Texture Rock_Metallic("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Displacement.jpg");
-Texture Rock_Displacment("Textures/PBR/marble_polished_vdkgdbpv/vdljfeglw_4K_Displacement.jpg");
 
+Texture Leather_Albedo("Textures/PBR/Studded Leather_tlooadar/Albedo_2K__tlooadar.png");
+Texture Leather_Normal("Textures/PBR/Studded Leather_tlooadar/Normal_2K__tlooadar.png");
+Texture Leather_Roughness("Textures/PBR/Studded Leather_tlooadar/Roughness_2K__tlooadar.png");
+Texture Leather_AO("Textures/PBR/Studded Leather_tlooadar/AO_2K__tlooadar.png");
 
 Material GoldMaterial(Gold_Albedo, Gold_Normal, Gold_Roughness, Gold_AO, Gold_Metallic);
 Material MarbleMaterial(Marble_Albedo, Marble_Normal, Marble_Roughness, Marble_AO);
-Material RockMaterial(Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO, Rock_Metallic, Rock_Displacment);
+Material RockMaterial(Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO, Rock_Metallic);
+Material LeatherMaterial(Leather_Albedo, Leather_Normal, Leather_Roughness, Leather_AO);
 
+Skybox skybox(&hdriCubemap);
+#pragma endregion
+
+#pragma region Create Lights
 DirectionalLight dirLight(1024, 1024, 1, { 1, 1, 1 }, 0.f, { 0.5, -1, 0 });
+
 std::vector<PointLight> pointlights(1);
 
 SpotLight spotLight({ 0, 5, 0 }, { 1, 1, 1, 1 }, { 0, -1, 0 }, 40, 10, 1024, 1024, 0.1, 100);
+#pragma endregion
 
-Model shpere;
+#pragma region Create Models
+Model monkey;
+Model sphere;
 Model quad;
-Model cube;
+#pragma endregion
 
-//Uniforms 
-bool useTexture = false;
+#pragma region Uniform Variables
+static bool usePBR = false;
 
-bool spotlightFlickering = false;		
-float spotlightFlickeringSpeed = 1.f;	
+static bool spotlightFlickering = false;
+static float spotlightFlickeringSpeed = 1.f;
 
-bool u_MonochromeToggle = false; 
-bool u_WobbleToggle     = false; 
-bool u_BlurToggle       = false; 
-float u_BlurStrength = 1.f;		 
-float x = 0, y = 0;
+static bool u_MonochromeToggle = false;
+static bool u_WobbleToggle = false;
+static bool u_BlurToggle = false;
+static float u_BlurStrength = 1.f;
+static float x = 0, y = 0;
 
-glm::vec3  albedo = glm::vec3(1.0, 0.f, 0.f);
-float metallic = 1.0f;
-float roughness = 1.0f;
-float ao = 1.0f;
+static glm::vec3  albedo = glm::vec3(1.0, 0.f, 0.f);
+static float metallic = 1.0f;
+static float roughness = 1.0f;
+static float ao = 1.0f;
+static int rX = 0;
+#pragma endregion
 
 //Scenes
-void PBRScene(Shader* shader) {
+static void PBRScene(Shader* shader) {
+
+
+	skybox.Render(&camera);
 
 	static int nrRows = 5;
 	static int nrColumns = 5;
 	static float spacing = 2.5;
 
+	shader->Bind();
+
+	dirLight.Bind(shader);
+	spotLight.Bind(shader, 0);
+	pointlights[0].Bind(shader, 0);
+
+	shader->Set1f("u_Time", glfwGetTime());
+	shader->SetVec3f("u_cameraPosition", (glm::vec3&)camera.GetCameraPosition());
+	shader->SetMat4f("u_View", camera.GetViewMatrix(), false);
+	shader->SetMat4f("u_Projection", camera.GetProjectionMatrix(),  false);
+	shader->SetVec3f("u_albedo", albedo);
+	shader->Set1f("u_ao", ao);
+	shader->Set1i("u_usePRB", usePBR);
+
+	LeatherMaterial.Bind();
+
 	for (int row = 0; row < nrRows; row++) {
 
-		shader->Set1f((float)row / (float)nrRows, "u_metallic");
+		shader->Set1f("u_metallic", (float)row / (float)nrRows);
 
 		for (int col = 0; col < nrColumns; col++) {
 
 			// we clamp the roughness to 0.05 - 1.0 as perfectly smooth surfaces (roughness of 0.0) tend to look a bit off
 			// on direct lighting.
-			shader->Set1f(glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f), "u_roughness");
+			shader->Set1f("u_roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
 
-			shpere.ResetModel();
-			shpere.SetRotation({ 90.f, 0.f, 0.f });
-			shpere.SetTranslation(glm::vec3(
+			sphere.ResetModel();
+			sphere.SetRotation({ 90.f, 0.f, 0.f });
+			sphere.SetTranslation(glm::vec3(
 				(col - (nrColumns / 2)) * spacing,
 				(row - (nrRows / 2)) * spacing,
 				0.0f));
 
-			shader->SetMat4f(shpere.GetModel(), "u_Model", false);
-			shpere.Render();
+			shader->SetMat4f("u_Model", sphere.GetModel(), false);
+			sphere.Render();
 		}
 	}
 
 }
 
-void RenderScene(Shader* shader) {
+static void RenderScene(Shader* shader) {
 	
+	skybox.Render(&camera);
 	shader->Bind();
 
 	if (spotlightFlickering) {
@@ -140,73 +179,71 @@ void RenderScene(Shader* shader) {
 	spotLight.Bind(shader, 0);
 	pointlights[0].Bind(shader, 0);
 
-	shader->Set1f(glfwGetTime(), "u_Time");
-	shader->SetVec3f(camera.GetCameraPosition(), "u_cameraPosition");
-	shader->SetMat4f(camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()), "u_Projection", false);
-	shader->SetMat4f(camera.CalculateViewMatrix(), "u_View", false);
+	shader->Set1f("u_Time", glfwGetTime());
+	shader->SetVec3f("u_cameraPosition", (glm::vec3&)camera.GetCameraPosition());
+	shader->SetMat4f("u_View",           camera.GetViewMatrix(),  false);
+	shader->SetMat4f("u_Projection",     camera.GetProjectionMatrix(),  false);
 
-	shader->SetVec3f(albedo, "albedo");
-	shader->Set1f(metallic, "metallic");
-	shader->Set1f(roughness, "roughness");
-	shader->Set1f(ao, "ao");
+	shader->SetVec3f("u_albedo", albedo);
+	shader->Set1f("u_metallic", metallic);
+	shader->Set1f("u_roughness", roughness);
+	shader->Set1f("u_ao", ao);
 
-	GoldMaterial.Bind();
+	MarbleMaterial.Bind();
 
-	shader->Set1i(useTexture, "u_usePRB");
-	shader->SetMat4f(cube.GetModel(), "u_Model", false);
+	shader->Set1i("u_usePRB", usePBR);
+	shader->SetMat4f("u_Model", sphere.GetModel(), false);
 	
-	cube.Render();
+	sphere.Render();
 
-	RockMaterial.Bind();
+	MarbleMaterial.Bind();
 
-	shader->Set1i(1, "u_usePRB");
-	shader->SetMat4f(quad.GetModel(), "u_Model", false);
+	shader->Set1i("u_usePRB", true);
+	shader->SetMat4f("u_Model", quad.GetModel(), false);
 	
 	quad.SetScale({ 5.f, 0.001, 5.f });
 	quad.SetTranslation({ 0.f, -2.5f, 0.f });
 	quad.SetRotation({ 180.f, 0.f, 0.f });
 	quad.Render();
 
-	x += 10 * window.GetDeltaTime();
-	y += 10 * window.GetDeltaTime();
-
 }
 
 //Shadow Passes 
-void DirectionalShadowMapPass(DirectionalLight* dirLight) {
+static void DirectionalShadowMapPass(DirectionalLight* dirLight) {
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	dirShadowShader.Bind();
-	dirShadowShader.SetMat4f(dirLight->CalculateLightTransform(), "u_DirectionLightTransform", false);
+	dirShadowShader.SetMat4f("u_DirectionLightTransform", dirLight->CalculateLightTransform(), false);
 
 	glViewport(0, 0, dirLight->GetShadowMapPtr()->GetWidth(), dirLight->GetShadowMapPtr()->GetHeight());
 	dirLight->GetShadowMapPtr()->BindFBO();
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	RenderScene(&dirShadowShader);
+	//PBRScene(&shader);
 	renderTarget.Bind(window);
 	glDisable(GL_CULL_FACE);
 };
 
-void OmniShadowMapPass(PointLight* light) {
+static void OmniShadowMapPass(PointLight* light) {
 
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 
 	omniShadowShader.Bind();
 
-	omniShadowShader.SetVec3f(light->GetPosition(), "u_lightPos");
-	omniShadowShader.Set1f(light->GetFarPlane(), "u_farPlane");
+	omniShadowShader.SetVec3f("u_lightPos", (glm::vec3&)light->GetPosition());
+	omniShadowShader.Set1f("u_farPlane", light->GetFarPlane());
 
 	auto lightMatrices = light->CalculateLightTransform();
 
-	omniShadowShader.SetMat4f(lightMatrices[0], "u_lightMatrices[0]", false);
-	omniShadowShader.SetMat4f(lightMatrices[1], "u_lightMatrices[1]", false);
-	omniShadowShader.SetMat4f(lightMatrices[2], "u_lightMatrices[2]", false);
-	omniShadowShader.SetMat4f(lightMatrices[3], "u_lightMatrices[3]", false);
-	omniShadowShader.SetMat4f(lightMatrices[4], "u_lightMatrices[4]", false);
-	omniShadowShader.SetMat4f(lightMatrices[5], "u_lightMatrices[5]", false);
+	omniShadowShader.SetMat4f("u_lightMatrices[0]", lightMatrices[0], false);
+	omniShadowShader.SetMat4f("u_lightMatrices[1]", lightMatrices[1], false);
+	omniShadowShader.SetMat4f("u_lightMatrices[2]", lightMatrices[2], false);
+	omniShadowShader.SetMat4f("u_lightMatrices[3]", lightMatrices[3], false);
+	omniShadowShader.SetMat4f("u_lightMatrices[4]", lightMatrices[4], false);
+	omniShadowShader.SetMat4f("u_lightMatrices[5]", lightMatrices[5],  false);
 
 	glViewport(0, 0, light->GetShadowMapPtr()->GetWidth(), light->GetShadowMapPtr()->GetHeight());
 
@@ -214,6 +251,7 @@ void OmniShadowMapPass(PointLight* light) {
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	RenderScene(&omniShadowShader);
+	//PBRScene(&shader);
 
 	renderTarget.Bind(window);
 	glDisable(GL_CULL_FACE);
@@ -221,8 +259,8 @@ void OmniShadowMapPass(PointLight* light) {
 }
 
 /* ~TODO~ 
-* Add System for swaping scene using GUI
 * Add System for drop and dropping textures with GUI
+* Add System for swaping scene using GUI
 * Add Displacement Mapping
 * Add Skelatal Animation Class
 */
@@ -232,16 +270,16 @@ int main() {
 	std::cout << "[MAIN]: " << std::this_thread::get_id() << "\n";
 
 	GuiLayer GuiLayer(window.GetWindow());
-	Skybox skybox(&hdriCubemap);
-	ResourceManager Manager;
-	pointlights[0] = PointLight({ 1, 1, 1, 0.f }, { 2.f, 5.0f, 0.0f }, 1024, 1024, 0.1, 100);
+
+	ResourceManager rManager;
+	pointlights[0] = PointLight({ 1, 1, 1, 0.f }, { 0.f, 5.0f, 0.0f }, 1024, 1024, 0.1, 100);
 
 	shader.CreateFromFile("Shaders/Vertex.glsl", "Shaders/Frag.glsl");
 	dirShadowShader.CreateFromFile("Shaders/DirectionShadowMapVert.glsl", "Shaders/DirectionShadowMapFrag.glsl");
 	omniShadowShader.CreateFromFile("Shaders/OmniShadowMapShaderVert.glsl", "Shaders/OmniShadowMapShaderGeom.glsl", "Shaders/OmniShadowMapShaderFrag.glsl");
-	QuadShader.CreateFromFile("Shaders/QuadShaderVert.glsl", "Shaders/QuadShaderFrag.glsl");
+	quadShader.CreateFromFile("Shaders/QuadShaderVert.glsl", "Shaders/QuadShaderFrag.glsl");
 
-#pragma region LoadTextures
+#pragma region Load Textures
 
 	HDRI.CreateHDRI();
 	hdriCubemap.CreateCubemapFromHDRI(HDRI);
@@ -249,22 +287,26 @@ int main() {
 	prefilterMap.CreatePrefilterMap(&hdriCubemap);
 	brdfLUTMap.CreateBRDFLookUpTable();
 
-	Manager.Load(&GoldMaterial);
-	Manager.Load(&MarbleMaterial);
-	Manager.Load(&RockMaterial);
+	rManager.Load(&GoldMaterial);
+	rManager.Load(&MarbleMaterial);
+	rManager.Load(&RockMaterial);
+	rManager.Load(&LeatherMaterial);
 
 #pragma endregion
 
+#pragma region Load Models
 	quad.Load("Models/quad.fbx");
 	quad.Create();
 
-	shpere.Load("Models/Sphere64.fbx");
-	shpere.Create();
+	sphere.Load("Models/Sphere64.fbx");
+	sphere.Create();
 
-	cube.Load("Models/monkey.fbx");
-	cube.Create();
-	cube.SetRotation({260, 0, 0});
-
+	monkey.Load("Models/monkey.fbx");
+	monkey.Create();
+	monkey.SetRotation({260, 0, 0});
+#pragma endregion
+	 
+#pragma region Shader Texture Setup
 	shader.Bind();
 
 	irradianceCubemap.Bind(TU_IRRADIANCE);
@@ -272,21 +314,26 @@ int main() {
 	brdfLUTMap.Bind(TU_BRDF);
 
 	// Init Textures
-	shader.Set1i(TU_IRRADIANCE, "u_irradianceMap");
-	shader.Set1i(TU_PREFILTER, "u_prefilterMap");
-	shader.Set1i(TU_BRDF, "u_brdfLUT");
+	shader.Set1i("u_irradianceMap", TU_IRRADIANCE);
+	shader.Set1i("u_prefilterMap", TU_PREFILTER);
+	shader.Set1i("u_brdfLUT", TU_BRDF);
 
-	shader.Set1i(TU_ALBEDO, "u_AlbedoTexture");
-	shader.Set1i(TU_NORMAL, "u_NormalTexture");
-	shader.Set1i(TU_ROUGHNESS, "u_RoughnessTexture");
-	shader.Set1i(TU_AO, "u_AOTexture");
-	shader.Set1i(TU_METALLIC, "u_MetallicTexture");
-	shader.Set1i(TU_DISPLACEMENT, "u_DisplacementTexture");
+	shader.Set1i("u_AlbedoTexture", TU_ALBEDO);
+	shader.Set1i("u_NormalTexture", TU_NORMAL);
+	shader.Set1i("u_RoughnessTexture", TU_ROUGHNESS );
+	shader.Set1i("u_AOTexture", TU_AO);
+	shader.Set1i("u_MetallicTexture", TU_METALLIC);
+	shader.Set1i("u_DisplacementTexture", TU_DISPLACEMENT);
 
 	shader.Unbind();
+#pragma endregion
 
 	while (window.IsOpen()) {
 		
+		window.Update();
+		rManager.Update();
+		camera.Update();
+
 		renderTarget.Bind(window);
 
 		//Shadow Passes
@@ -294,17 +341,14 @@ int main() {
 		OmniShadowMapPass(&pointlights[0]);
 		OmniShadowMapPass(&spotLight);
 
-		glDisable(GL_DEPTH);
-		skybox.Render(camera.CalculateViewMatrix(), camera.CalculateProjectionMatrix(window.GetBufferWidth(), window.GetBufferHeight()));
-		glEnable(GL_DEPTH);
 		RenderScene(&shader);
+		//PBRScene(&shader);
 
 		renderTarget.Unbind();
 	
-		window.Update();
 		if (window.UpdateOnFocus()) {
-			camera.mouseControl(window.GetXChange(), window.GetYChange(), window.GetDeltaTime());
-			camera.keyControl(window.GetsKeys(), window.GetDeltaTime());
+			camera.MouseControl();
+			camera.KeyControl();
 		}
 
 		// GUI //
@@ -322,13 +366,13 @@ int main() {
 			}
 
 			if (ImGui::CollapsingHeader("Texture Options")) {
-				ImGui::Checkbox("Use PBR Textures", &useTexture);
-				if (!useTexture) {
-					ImGui::ColorEdit3("Object Colour", (float*)&albedo);
-					ImGui::DragFloat("Metallic", &metallic, 0.01, 0.f, 1.f);
-					ImGui::DragFloat("AO", &ao, 0.01, 0.f, 1.f);
-					ImGui::DragFloat("Roughness", &roughness, 0.01, 0.f, 1.f);
-				}
+				ImGui::Checkbox("Use PBR Textures", &usePBR);
+		
+				ImGui::ColorEdit3("Object Colour", (float*)&albedo);
+				ImGui::DragFloat("Metallic", &metallic, 0.01, 0.f, 1.f);
+				ImGui::DragFloat("AO", &ao, 0.01, 0.f, 1.f);
+				ImGui::DragFloat("Roughness", &roughness, 0.01, 0.f, 1.f);
+				
 			}
 
 			if (ImGui::CollapsingHeader("PointLight Options")) {
@@ -362,26 +406,25 @@ int main() {
 			ImGui::End();
 		}
 
-		QuadShader.Bind();
+		quadShader.Bind();
 		
-		QuadShader.Set1i(0, "u_Frame");
 		renderTarget.GetTexture()->Bind(0);
+		quadShader.Set1i("u_Frame", 0);
 
-		QuadShader.Set1i(u_BlurToggle, "u_BlurToggle");
-		QuadShader.Set1f(u_BlurStrength, "u_BlurStrength");
-		QuadShader.Set1i(u_MonochromeToggle, "u_MonochromeToggle");
-		QuadShader.Set1i(u_WobbleToggle, "u_WobbleToggle");
+		quadShader.Set1i("u_BlurToggle", u_BlurToggle);
+		quadShader.Set1f("u_BlurStrength", u_BlurStrength);
+		quadShader.Set1i("u_MonochromeToggle", u_MonochromeToggle);
+		quadShader.Set1i("u_WobbleToggle", u_WobbleToggle);
 
-		QuadShader.SetVec2f(glm::vec2(window.GetBufferWidth(), window.GetBufferHeight()), "u_Resolution");
-		QuadShader.Set1f(glfwGetTime(), "u_Offset");
+		quadShader.SetVec2f("u_Resolution", glm::vec2(window.GetBufferWidth(), window.GetBufferHeight()));
+		quadShader.Set1f("u_Offset", glfwGetTime());
 
 		//Draw quad
 		renderQuad();
 
 		GuiLayer.End();
 		window.Clear();
-		Manager.Update();
-
+	
 	}
 
 	return 0;

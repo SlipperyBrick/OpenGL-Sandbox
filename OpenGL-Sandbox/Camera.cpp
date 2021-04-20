@@ -2,6 +2,17 @@
 
 Camera::Camera() {
 
+	m_window = nullptr;
+
+	m_view = glm::mat4(1.f);
+	m_projection = glm::mat4(1.f);
+
+	m_bufferHeight = 1;
+	m_bufferWidth = 1;
+
+	m_x = 0.f;
+	m_y = 0.f;
+
 	m_position = {0, 0, 0};
 	m_front    = {0, 0, 0};
 	m_up       = {0, 1, 0};
@@ -13,14 +24,25 @@ Camera::Camera() {
 
 	m_fov = 60.f;
 
-	moveSpeed = 5;
-	startingMoveSpeed = 5;
-	turnSpeed = 110;
+	m_moveSpeed = 5;
+	m_startingMoveSpeed = 5;
+	m_turnSpeed = 110;
 
 }
 
-Camera::Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed, float fov)
-{
+Camera::Camera(Window* window, glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLfloat startPitch, GLfloat startMoveSpeed, GLfloat startTurnSpeed, float fov) {
+	
+	m_window = window;
+
+	m_view = glm::mat4(1.f);
+	m_projection = glm::mat4(1.f);
+
+	m_bufferHeight = 1;
+	m_bufferWidth = 1;
+
+	m_x = 0.f;
+	m_y = 0.f;
+
 	m_position = startPosition;
 	m_worldUp = startUp;
 	
@@ -30,19 +52,19 @@ Camera::Camera(glm::vec3 startPosition, glm::vec3 startUp, GLfloat startYaw, GLf
 	m_up = startUp;
 	m_right = glm::vec3(0.f);
 
-	startingMoveSpeed = startMoveSpeed;
-	moveSpeed = startMoveSpeed;
-	turnSpeed = startTurnSpeed;
+	m_startingMoveSpeed = startMoveSpeed;
+	m_moveSpeed = startMoveSpeed;
+	m_turnSpeed = startTurnSpeed;
 
 	m_fov = fov;
 
-	update();
 }
 
-void Camera::keyControl(bool* keys, GLfloat deltaTime)
+void Camera::KeyControl()
 {
-	GLfloat velocity = moveSpeed * deltaTime;
-
+	bool* keys = m_window->GetsKeys();
+	
+	GLfloat velocity = m_moveSpeed * m_window->GetDeltaTime();
 
 	if (keys[GLFW_KEY_E]) {
 		m_position.y += velocity;
@@ -54,7 +76,7 @@ void Camera::keyControl(bool* keys, GLfloat deltaTime)
 
 	if (keys[GLFW_KEY_W])
 	{
-		m_position += m_front * velocity; //old
+		m_position += m_front * velocity;
 	}
 
 	if (keys[GLFW_KEY_S])
@@ -74,21 +96,24 @@ void Camera::keyControl(bool* keys, GLfloat deltaTime)
 
 	if (keys[GLFW_KEY_LEFT_SHIFT]) 
 	{
-		moveSpeed = 10.0f;
+		m_moveSpeed = 10.0f;
 	}
 	else
 	{
-		moveSpeed = startingMoveSpeed;
+		m_moveSpeed = m_startingMoveSpeed;
 	}
 }
 
-void Camera::mouseControl(GLfloat xChange, GLfloat yChange, GLfloat deltaTime)
-{
-	xChange *= turnSpeed * deltaTime;
-	yChange *= turnSpeed * deltaTime;
+void Camera::MouseControl() {
 
-	m_yaw += xChange;
-	m_pitch += yChange;
+	m_x = m_window->GetXChange();
+	m_y = m_window->GetYChange();
+
+	m_x *= m_turnSpeed * m_window->GetDeltaTime();
+	m_y *= m_turnSpeed * m_window->GetDeltaTime();
+
+	m_yaw += m_x;
+	m_pitch += m_y;
 
 	if (m_pitch > 89.0f)
 	{
@@ -100,20 +125,34 @@ void Camera::mouseControl(GLfloat xChange, GLfloat yChange, GLfloat deltaTime)
 		m_pitch = -89.0f;
 	}
 
-	update();
 }
 
-glm::mat4 Camera::CalculateViewMatrix()
+void Camera::Update()
 {
-	return glm::lookAt(m_position, m_position + m_front, m_worldUp);
+	m_front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+	m_front.y = sin(glm::radians(m_pitch));
+	m_front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
+	m_front = glm::normalize(m_front);
+
+	m_right = glm::normalize(glm::cross(m_front, m_worldUp));
+	m_up = glm::normalize(glm::cross(m_right, m_front));
+
+	m_view = glm::lookAt(m_position, m_position + m_front, m_worldUp);
+
+	m_bufferWidth = m_window->GetBufferWidth();
+	m_bufferHeight = m_window->GetBufferHeight();
+
+	(m_bufferWidth + m_bufferHeight) == 0 ? m_bufferWidth = 1 : m_bufferWidth = m_bufferWidth; //Make sure buffers arent 0 so program doesnt divide 0 by 0
+	m_projection = glm::perspective(glm::radians(m_fov), (m_bufferWidth) / m_bufferHeight, 0.1f, 100.f);
+	
 }
 
-glm::mat4 Camera::CalculateProjectionMatrix(GLfloat bufferWidth, GLfloat bufferHeight)
-{   
-	//Make sure buffers arent 0 so program doesnt divide 0 by 0
-	(bufferHeight + bufferHeight) == 0 ? bufferHeight = 1 : bufferHeight = bufferHeight;
-	return glm::perspective(glm::radians(m_fov), (bufferWidth) / bufferHeight, 0.1f, 100.f);
- 	
+glm::mat4 Camera::GetViewMatrix() {
+	return m_view;
+}
+
+glm::mat4 Camera::GetProjectionMatrix() {   
+	return m_projection;
 }
 
 glm::vec3 Camera::GetCameraPosition()
@@ -121,7 +160,7 @@ glm::vec3 Camera::GetCameraPosition()
 	return m_position;
 }
 
-glm::vec3 Camera::getCameraDirection()
+glm::vec3 Camera::GetCameraDirection()
 {
 	return glm::normalize(m_front);
 }
@@ -134,17 +173,6 @@ GLfloat Camera::GetYaw()
 GLfloat Camera::GetPitch()
 {
 	return m_pitch;
-}
-
-void Camera::update()
-{
-	m_front.x = cos(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-	m_front.y = sin(glm::radians(m_pitch));
-	m_front.z = sin(glm::radians(m_yaw)) * cos(glm::radians(m_pitch));
-	m_front = glm::normalize(m_front);
-
-	m_right = glm::normalize(glm::cross(m_front, m_worldUp));
-	m_up = glm::normalize(glm::cross(m_right, m_front));
 }
 
 Camera::~Camera()

@@ -57,7 +57,7 @@ void ResourceManager::Load(Material* material)
 void ResourceManager::Update()
 {
 	m_current = m_textures.size();
-	for (size_t i = 0; i < m_current - m_last; i++) {
+	for (size_t i = 0; i < m_current - m_last; i++) { //TODO Make loop iterate once per frame
 		m_textureFutures.push_back(std::async(std::launch::async, LoadTexture, m_textures[m_last + i]));
 	}
 

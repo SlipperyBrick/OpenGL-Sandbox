@@ -2,14 +2,12 @@
 
 Shader::Shader()
 {
-	shaderID = 0;
-	u_Model = 0;
-	u_Projection = 0;
+	m_id = 0;
 }
 
 Shader::~Shader()
 {
-
+	this->ClearShader();
 }
 
 void Shader::CreateFromString(const char* vertexShader, const char* fragmentShader)
@@ -65,20 +63,10 @@ std::string Shader::ReadFile(const char* path)
 
 }
 
-GLuint Shader::GetProjectionLocation()
-{
-	return u_Projection;
-}
-
-GLuint Shader::GetModelLocation()
-{
-	return u_Model;
-}
-
 void Shader::Bind()
 {
-	if (shaderID != 0)
-		glUseProgram(shaderID);
+	if (m_id != 0)
+		glUseProgram(m_id);
 	else
 		std::cout << "[SHADER ERROR]: Shader did not bind..\n";
 }
@@ -90,53 +78,45 @@ void Shader::Unbind()
 
 void Shader::ClearShader()
 {
-	if (shaderID != 0) {
-		glDeleteProgram(shaderID);
-		shaderID = 0;
+	if (m_id != 0) {
+		glDeleteProgram(m_id);
+		m_id = 0;
 	}
 
-	u_Projection = 0;
-	u_Model = 0;
 }
 
-void Shader::Set1f(GLfloat value, const GLchar* name)
+void Shader::Set1f(const std::string& name, const GLfloat value)
 {
-	glUniform1f(glGetUniformLocation(shaderID, name), value);
+	glUniform1f(GetUniformLocation(name), value);
 }
 
-void Shader::Set1i(GLint value, const GLchar* name)
+void Shader::Set1i(const std::string& name, const GLint value)
 {
-	glUniform1i(glGetUniformLocation(this->shaderID, name), value);
+	glUniform1i(GetUniformLocation(name), value);
 }
 
-void Shader::Set2f(glm::vec2 value, const GLchar* name)
+void Shader::SetVec2f(const std::string& name, const glm::vec2& value)
 {
-   glUniform2fv(glGetUniformLocation(shaderID, name), 1, glm::value_ptr(value));
+	glUniform2f(GetUniformLocation(name), value.x, value.y);
 }
 
-void Shader::SetVec2f(glm::vec2 value, const GLchar* name)
+void Shader::SetVec3f(const std::string& name, const glm::vec3& value)
 {
-	glUniform2fv(glGetUniformLocation(shaderID, name), 1, glm::value_ptr(value));
+	glUniform3f(GetUniformLocation(name), value.x, value.y, value.z);
 }
 
-void Shader::SetVec3f(glm::fvec3 value, const GLchar* name)
-{
-	glUniform3fv(glGetUniformLocation(shaderID, name), 1, glm::value_ptr(value));
+void Shader::SetVec4f(const std::string& name, const glm::vec4& value) {
+	glUniform4f(GetUniformLocation(name), value.x, value.y, value.z, value.w);
 }
 
-void Shader::SetVec4f(glm::vec4 value, const GLchar* name)
+void Shader::SetMat3f(const std::string& name, const glm::mat3& value, const bool transpose)
 {
-	glUniform4fv(glGetUniformLocation(shaderID, name), 1, glm::value_ptr(value));
+	glUniformMatrix3fv(GetUniformLocation(name), 1, transpose, glm::value_ptr(value));
 }
 
-void Shader::SetMat3f(glm::mat3 value, const char* name, bool transpose)
+void Shader::SetMat4f(const std::string& name, const glm::mat4& value, const bool transpose)
 {
-	glUniformMatrix3fv(glGetUniformLocation(shaderID, name), 1, transpose, glm::value_ptr(value));
-}
-
-void Shader::SetMat4f(glm::mat4 value, const char* uniformName, bool transpose)
-{
-	glUniformMatrix4fv(glGetUniformLocation(shaderID, uniformName), 1, transpose, glm::value_ptr(value));
+	glUniformMatrix4fv(GetUniformLocation(name), 1, transpose, glm::value_ptr(value));
 }
 
 void Shader::Validate()
@@ -144,11 +124,11 @@ void Shader::Validate()
 	GLint result = 0;
 	GLchar eLog[1024] = { 0 };
 
-	glValidateProgram(shaderID);
-	glGetProgramiv(shaderID, GL_VALIDATE_STATUS, &result);
+	glValidateProgram(m_id);
+	glGetProgramiv(m_id, GL_VALIDATE_STATUS, &result);
 	if (!result)
 	{
-		glGetProgramInfoLog(shaderID, sizeof(eLog), NULL, eLog);
+		glGetProgramInfoLog(m_id, sizeof(eLog), NULL, eLog);
 		printf("Error validating program: '%s'\n", eLog);
 		return;
 	}
@@ -174,103 +154,97 @@ void Shader::QueryWorkgroups() {
 
 void Shader::CompileShader(const char* vertexShader, const char* fragmentShader)
 {
-	shaderID = glCreateProgram();
+	m_id = glCreateProgram();
 
-	AddShader(shaderID, vertexShader, GL_VERTEX_SHADER);
-	AddShader(shaderID, fragmentShader, GL_FRAGMENT_SHADER);
+	AddShader(m_id, vertexShader, GL_VERTEX_SHADER);
+	AddShader(m_id, fragmentShader, GL_FRAGMENT_SHADER);
 
 	GLint result = 0;
 	GLchar errorLog[1024] = { 0 };
 
-	glLinkProgram(shaderID);
-	glGetProgramiv(shaderID, GL_LINK_STATUS, &result);
+	glLinkProgram(m_id);
+	glGetProgramiv(m_id, GL_LINK_STATUS, &result);
 	if (!result) {
-		glGetProgramInfoLog(shaderID, sizeof(errorLog), NULL, errorLog);
+		glGetProgramInfoLog(m_id, sizeof(errorLog), NULL, errorLog);
 		printf("[ERROR]: Linking program failed: '%s'\n", errorLog);
 		return;
 	}
 
-	glValidateProgram(shaderID);
-	glGetProgramiv(shaderID, GL_VALIDATE_STATUS, &result);
+	glValidateProgram(m_id);
+	glGetProgramiv(m_id, GL_VALIDATE_STATUS, &result);
 	if (!result) {
-		glGetProgramInfoLog(shaderID, sizeof(errorLog), NULL, errorLog);
+		glGetProgramInfoLog(m_id, sizeof(errorLog), NULL, errorLog);
 		printf("[ERROR]: Validating program failed: '%s'\n", errorLog);
 		return;
 	}
 
-	if (!shaderID) {
+	if (!m_id) {
 		printf("[ERROR]: shader wasn't complied..\n");
 		return;
 	}
-
-	u_Model = glGetUniformLocation(shaderID, "u_Model");
-	u_Projection = glGetUniformLocation(shaderID, "u_Projection");
-
 }
 
 void Shader::CompileShader(const char* vertexShader, const char* geometryShader, const char* fragmentShader)
 {
-	shaderID = glCreateProgram();
+	m_id = glCreateProgram();
 
-	AddShader(shaderID, vertexShader, GL_VERTEX_SHADER);
-	AddShader(shaderID, geometryShader, GL_GEOMETRY_SHADER);
-	AddShader(shaderID, fragmentShader, GL_FRAGMENT_SHADER);
+	AddShader(m_id, vertexShader, GL_VERTEX_SHADER);
+	AddShader(m_id, geometryShader, GL_GEOMETRY_SHADER);
+	AddShader(m_id, fragmentShader, GL_FRAGMENT_SHADER);
 
 	GLint result = 0;
 	GLchar errorLog[1024] = { 0 };
 
-	glLinkProgram(shaderID);
-	glGetProgramiv(shaderID, GL_LINK_STATUS, &result);
+	glLinkProgram(m_id);
+	glGetProgramiv(m_id, GL_LINK_STATUS, &result);
 	if (!result) {
-		glGetProgramInfoLog(shaderID, sizeof(errorLog), NULL, errorLog);
+		glGetProgramInfoLog(m_id, sizeof(errorLog), NULL, errorLog);
 		printf("[ERROR]: Linking program failed: '%s'\n", errorLog);
 		return;
 	}
 
-	glValidateProgram(shaderID);
-	glGetProgramiv(shaderID, GL_VALIDATE_STATUS, &result);
+	glValidateProgram(m_id);
+	glGetProgramiv(m_id, GL_VALIDATE_STATUS, &result);
 	if (!result) {
-		glGetProgramInfoLog(shaderID, sizeof(errorLog), NULL, errorLog);
+		glGetProgramInfoLog(m_id, sizeof(errorLog), NULL, errorLog);
 		printf("[ERROR]: Validating program failed: '%s'\n", errorLog);
 		return;
 	}
 
-	if (!shaderID) {
+	if (!m_id) {
 		printf("[ERROR]: shader wasn't complied..\n");
 		return;
 	}
 
-	u_Model = glGetUniformLocation(shaderID, "u_Model");
-	u_Projection = glGetUniformLocation(shaderID, "u_Projection");
 }
 
 void Shader::CompileShader(const char* computeShader)
 {
 	
-	shaderID = glCreateProgram();
+	m_id = glCreateProgram();
 
-	AddShader(shaderID, computeShader, GL_COMPUTE_SHADER);
+	AddShader(m_id, computeShader, GL_COMPUTE_SHADER);
 
 	GLint result = 0;
 	GLchar errorLog[1024] = { 0 };
 
-	glLinkProgram(shaderID);
-	glGetProgramiv(shaderID, GL_LINK_STATUS, &result);
+	glLinkProgram(m_id);
+	glGetProgramiv(m_id, GL_LINK_STATUS, &result);
 	if (!result) {
-		glGetProgramInfoLog(shaderID, sizeof(errorLog), NULL, errorLog);
+		glGetProgramInfoLog(m_id, sizeof(errorLog), NULL, errorLog);
 		printf("[ERROR]: Linking program failed: '%s'\n", errorLog);
 		return;
 	}
 
-	glValidateProgram(shaderID);
-	glGetProgramiv(shaderID, GL_VALIDATE_STATUS, &result);
+	glValidateProgram(m_id);
+	glGetProgramiv(m_id, GL_VALIDATE_STATUS, &result);
 	if (!result) {
-		glGetProgramInfoLog(shaderID, sizeof(errorLog), NULL, errorLog);
+		glGetProgramInfoLog(m_id, sizeof(errorLog), NULL, errorLog);
 		printf("[ERROR]: Validating program failed: '%s'\n", errorLog);
 		return;
 	}
 
-	if (!shaderID) {
+	if (!m_id) {
 		printf("[ERROR]: shader wasn't complied..\n");
 		return;
 	}
@@ -299,4 +273,14 @@ void Shader::AddShader(GLuint program, const char* shaderCode, GLenum type)
 		return;
 	}
 	glAttachShader(program, shader);
+}
+
+GLint Shader::GetUniformLocation(const std::string& name) const 
+{
+	if (m_uniformLocationMap.find(name) != m_uniformLocationMap.end())
+		return m_uniformLocationMap[name];
+
+	GLint location = glGetUniformLocation(m_id, name.c_str());
+	m_uniformLocationMap[name] = location;
+	return location;
 }

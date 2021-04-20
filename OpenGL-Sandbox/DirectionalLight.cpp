@@ -48,10 +48,10 @@ void DirectionalLight::Bind(Shader* shader) {
 
 	GetShadowMapPtr()->BindTexture(TU_DIRECTIONAL_SHADOW_MAP);
 	
-	shader->SetVec4f(glm::vec4(m_colour, m_intensity), "DirLight.m_colour");
-	shader->SetVec3f(m_direction, "DirLight.m_direction");
-	shader->SetMat4f(CalculateLightTransform(), "u_DirectionLightTransform", false);
-	shader->Set1i(TU_DIRECTIONAL_SHADOW_MAP, "DirLight.m_shadowMap");
-	shader->Set1i(m_filterLevel, "DirLight.m_filterLevel");
+	shader->SetVec4f("DirLight.m_colour", glm::vec4(m_colour, m_intensity));
+	shader->SetVec3f("DirLight.m_direction", m_direction);
+	shader->SetMat4f("u_DirectionLightTransform", CalculateLightTransform(), false);
+	shader->Set1i("DirLight.m_shadowMap", TU_DIRECTIONAL_SHADOW_MAP);
+	shader->Set1i("DirLight.m_filterLevel", m_filterLevel);
 
 }

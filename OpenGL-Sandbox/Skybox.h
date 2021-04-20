@@ -10,6 +10,8 @@
 #include "Mesh.h"
 #include "Shader.h"
 #include "Texture.h"
+#include "Camera.h"
+
 
 class Skybox
 {
@@ -20,7 +22,7 @@ public:
 
    ~Skybox();
 
-   void Render(glm::mat4 viewMatrix, glm::mat4 projectionMatrix);
+   void Render(Camera* camera);
    void SetCubemap(Texture* cubemap);
 
 private:
