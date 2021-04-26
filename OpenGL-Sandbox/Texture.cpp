@@ -27,7 +27,7 @@ Texture::Texture() {
 	glGenTextures(1, &m_id);
 }
 
-Texture::Texture(const char* path) {
+Texture::Texture(std::string path) {
 
 	m_id = NULL;
 	m_width = NULL;
@@ -76,33 +76,43 @@ void Texture::CreateTexture2D()
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST_MIPMAP_LINEAR);
 		glTexImage2D(GL_TEXTURE_2D, 0, m_format, m_width, m_height, 0, m_format, GL_UNSIGNED_BYTE, m_data2D);
-		//glGenerateMipmap(GL_TEXTURE_2D);
+		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glBindTexture(this->m_textureType, 0);
 		delete m_data2D;
 
 	} else {
 		
-		if (!m_path) {
+		if (!m_path.c_str()) {
 			printf("[ERROR]: No path to load texture. \n");
 		} 
-
-		printf("[ERROR]: No texture data. \n");
+		std::cout << "[ERROR]: No texture data - " << m_path.c_str() << "\n";
 	}
 
 }
 
 void Texture::LoadImageData() {	
-	m_data2D = stbi_load(m_path, &m_width, &m_height, &m_components, 0);
+	
+	if (m_path.c_str()) {
+		m_data2D = stbi_load(m_path.c_str(), &m_width, &m_height, &m_components, 0);
+		if (!m_data2D) {
+			if (stbi_failure_reason())
+				std::cout << "[ERROR]: " << m_path << " - " <<stbi_failure_reason() << std::endl;
+			__debugbreak();
+		}
+
+	} else {
+		std::cout << "[ERROR]: failed to load data, no path \n";
+	}
 }
 
 void Texture::LoadHDRIData()
 {
 	stbi_set_flip_vertically_on_load(true);
-	m_imageHDRI = stbi_loadf(m_path, &this->m_width, &this->m_height, &this->m_components, NULL);
+	m_imageHDRI = stbi_loadf(m_path.c_str(), &this->m_width, &this->m_height, &this->m_components, NULL);
 }
 
 void Texture::CreateDrawTexture(unsigned int width, unsigned int height) {
@@ -167,7 +177,7 @@ void Texture::CreateHDRI() {
 	this->LoadHDRIData();
 	if (!m_imageHDRI) {
 
-		if (!m_path)
+		if (!m_path.c_str())
 			std::cout << "[ERROR]: No HDRI image path to load \n";
 		else
 			std::cout << "[ERROR]: Failed to load texture " << '"' << m_path << '"' << "\n";
@@ -251,6 +261,8 @@ void Texture::CreateIrradianceTexture(Texture* Cubemap) {
 
 	this->m_textureType = GL_TEXTURE_CUBE_MAP;
 	
+	unsigned int resoultion = 64;
+
 	Shader IrradianceConvolutionShader;
 	IrradianceConvolutionShader.CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/IrradianceConvolutionFrag.glsl");
 	
@@ -259,7 +271,7 @@ void Texture::CreateIrradianceTexture(Texture* Cubemap) {
 
 	for (size_t i = 0; i < 6; i++)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 32, 32, 0, GL_RGB, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, resoultion, resoultion, 0, GL_RGB, GL_FLOAT, nullptr);
 	}
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -272,14 +284,14 @@ void Texture::CreateIrradianceTexture(Texture* Cubemap) {
 
 	glBindFramebuffer(GL_FRAMEBUFFER, m_captureFBO);
 	glBindRenderbuffer(GL_RENDERBUFFER, m_captureRBO);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, 32, 32);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, resoultion, resoultion);
 
 	Cubemap->Bind(0);
 	IrradianceConvolutionShader.Bind();
 	IrradianceConvolutionShader.Set1i("u_environmentMap", 0);
 	IrradianceConvolutionShader.SetMat4f("u_projectionMatrix", captureProjection, false);
 
-	glViewport(0, 0, 32, 32);
+	glViewport(0, 0, resoultion, resoultion);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_captureFBO);
 	for (unsigned int i = 0; i < 6; i++)
 	{
@@ -298,6 +310,8 @@ void Texture::CreatePrefilterMap(Texture* Cubemap) {
 
 	this->m_textureType = GL_TEXTURE_CUBE_MAP;
 
+	unsigned int resoultion = 128;
+
 	Shader prefilterShader;
 	prefilterShader.CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/PrefilterFrag.glsl");
 
@@ -312,7 +326,7 @@ void Texture::CreatePrefilterMap(Texture* Cubemap) {
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
 	for (unsigned int i = 0; i < 6; ++i)
 	{
-		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, 512, 512, 0, GL_RGB, GL_FLOAT, nullptr);
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB16F, resoultion, resoultion, 0, GL_RGB, GL_FLOAT, nullptr);
 	}
 
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -337,8 +351,8 @@ void Texture::CreatePrefilterMap(Texture* Cubemap) {
 	for (unsigned int mip = 0; mip < maxMipLevels; ++mip)
 	{
 		// reisze framebuffer according to mip-level size.
-		unsigned int mipWidth = 512 * std::pow(0.5, mip);
-		unsigned int mipHeight = 512 * std::pow(0.5, mip);
+		unsigned int mipWidth = resoultion * std::pow(0.5, mip);
+		unsigned int mipHeight = resoultion * std::pow(0.5, mip);
 		glBindRenderbuffer(GL_RENDERBUFFER, m_captureFBO);
 		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT24, mipWidth, mipHeight);
 		glViewport(0, 0, mipWidth, mipHeight);

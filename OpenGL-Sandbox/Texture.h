@@ -5,6 +5,7 @@
 #include <assert.h>
 #include <future>
 #include <mutex>
+#include <unordered_map>
 
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
@@ -19,7 +20,7 @@ class Texture
 {
 public:
 	Texture();
-	Texture(const char* path);
+	Texture(std::string path);
 	~Texture();
 
 	GLuint const GetTextureID();
@@ -73,7 +74,7 @@ private:
 	int m_components;
 	int m_textureType;
 	GLenum m_format;
-	const char* m_path;
+	std::string m_path;
 	unsigned char* m_data2D;
 	float* m_imageHDRI;
 	unsigned int m_captureFBO, m_captureRBO;

@@ -208,5 +208,8 @@
     <None Include="Shaders\QuadShaderVert.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
+    <None Include="Basic.frag">
+      <Filter>Resource Files\Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

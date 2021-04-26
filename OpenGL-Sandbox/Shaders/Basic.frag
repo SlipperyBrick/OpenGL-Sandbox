@@ -5,52 +5,6 @@ const float PI = 3.14159265359;
 const int MAX_POINT_LIGHTS = 1;
 const int MAX_SPOT_LIGHTS = 1;
 
-out vec4 colour;                               
-
-in vec3 vs_position;
-in vec2 vs_texcoord;
-in vec3 vs_normal;   
-
-vec3 GetNormalFromMap(sampler2D noramlTexture) {
-
-    vec3 tangentNormal = texture(noramlTexture, vs_texcoord).xyz * 2.0 - 1.0;
-
-    vec3 Q1  = dFdx(vs_position);
-    vec3 Q2  = dFdy(vs_position);
-    vec2 st1 = dFdx(vs_texcoord);
-    vec2 st2 = dFdy(vs_texcoord);
-
-    vec3 N   = normalize(vs_normal);
-    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
-    vec3 B  = -normalize(cross(N, T));
-    mat3 TBN = mat3(T, B, N);
-
-    return normalize(TBN * tangentNormal);
-}
-
-struct Material {
-
-   sampler2D m_AlbedoTexture;
-   sampler2D m_NormalTexture;
-   sampler2D m_RoughnessTexture;
-   sampler2D m_AOTexture;
-   sampler2D m_MetallicTexture;
-   sampler2D m_DisplacementTexture;
-
-   vec3 m_Albedo;
-   float m_Roughness;
-   float m_AO;
-   float m_Metallic;
-
-   bool m_HasAlbedoTexture;
-   bool m_HasNormalTexture;
-   bool m_HasRoughnessTexture;
-   bool m_HasAOTexture;
-   bool m_HasMetallicTexture;
-   bool m_HasDisplacementTexture;
-
-};
-
 struct PointLight {
 
     vec3 m_position;
@@ -79,7 +33,13 @@ struct DirectionLight {
     int m_filterLevel;
     sampler2D m_shadowMap;
 };
-         
+
+out vec4 colour;                               
+
+in vec3 vs_position;
+in vec2 vs_texcoord;
+in vec3 vs_normal;            
+
 in vec4 vs_directionLightPosition;
 in vec3 vs_cameraPosition;
 
@@ -89,7 +49,12 @@ uniform DirectionLight DirLight;
 uniform SpotLight spotlight;
 
 //pbr textures
-uniform Material material;
+uniform sampler2D u_AlbedoTexture;
+uniform sampler2D u_NormalTexture;
+uniform sampler2D u_RoughnessTexture;
+uniform sampler2D u_AOTexture;
+uniform sampler2D u_MetallicTexture;
+uniform sampler2D u_DisplacementTexture;
 
 //skybox textures
 uniform samplerCube u_irradianceMap;
@@ -104,6 +69,9 @@ uniform vec3  u_albedo;
 uniform float u_metallic;
 uniform float u_roughness;
 uniform float u_ao;
+
+mat3 t;
+vec3 v;
 
 vec3 sampleOffsetDirections[20] = vec3[] (
    vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
@@ -120,16 +88,41 @@ float CalcOmniShadowFactor(PointLight light, int index) {
 
     float shadow = 0.f;
     float bias = 0.05;
-    int samples = 40;
+    int samples = 10;
 
     float viewDirection = length(vs_cameraPosition - vs_position);
-    float radius = (1.f + (viewDirection / light.m_omniFarPlane)) / 100.f;
+    float radius = (1.f + (viewDirection / light.m_omniFarPlane)) / 25.f;
 
     for(int i = 0; i < samples; i++) {
         float closestDepth = texture(light.m_omniShadowMap, lightDir + sampleOffsetDirections[i] * radius).r;
         closestDepth *= light.m_omniFarPlane;
         if(currDpeth - bias > closestDepth) {
             shadow += 1.f;
+        }
+
+    }
+
+    shadow /= float(samples);
+    return shadow;
+}
+
+float CalcOmniShadowFactor(SpotLight light, int index) {
+
+    vec3 lightDir = vs_position - light.base.m_position;
+    float currDpeth = length(lightDir);
+
+    float shadow = 0.f;
+    float bias = 0.05;
+    int samples = 25;
+
+    float viewDirection = length(vs_cameraPosition - vs_position);
+    float radius = (1 + (viewDirection / light.base.m_omniFarPlane)) / 25.f;
+
+    for(int i = 0; i < samples; i++) {
+        float closestDepth = texture(light.base.m_omniShadowMap, lightDir + sampleOffsetDirections[i] * radius).r;
+        closestDepth *= light.base.m_omniFarPlane;
+        if(currDpeth - bias > closestDepth) {
+            shadow += 1.0f;
         }
 
     }
@@ -194,6 +187,23 @@ vec3 CalcDirLight(DirectionLight light, vec3 albedo, vec3 normal, float metallic
 
 } 
 
+
+vec3 GetNormalFromMap() {
+
+    vec3 tangentNormal = texture(u_NormalTexture, vs_texcoord).xyz * 2.0 - 1.0;
+
+    vec3 Q1  = dFdx(vs_position);
+    vec3 Q2  = dFdy(vs_position);
+    vec2 st1 = dFdx(vs_texcoord);
+    vec2 st2 = dFdy(vs_texcoord);
+
+    vec3 N   = normalize(vs_normal);
+    vec3 T  = normalize(Q1*st2.t - Q2*st1.t);
+    vec3 B  = -normalize(cross(N, T));
+    mat3 TBN = mat3(T, B, N);
+
+    return normalize(TBN * tangentNormal);
+}
 
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
 
@@ -289,7 +299,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 albedo, vec3 normal, float metallic, fl
 
     vec3 colour = CalcPointLight(light.base, V, albedo, normal, roughness, metallic, F0);
 
-    float shadowFactor = CalcOmniShadowFactor(light.base, 0);
+    float shadowFactor = CalcOmniShadowFactor(light, 0);
 
     if(theta > light.m_innerEdge) 
     {   
@@ -298,6 +308,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 albedo, vec3 normal, float metallic, fl
 
 }
  
+
 vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, float ao) {
     
     vec3 N = normal;
@@ -309,6 +320,10 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
     vec3 F0 = vec3(0.04); 
     F0 = mix(F0, albedo, metallic);
 
+    ao        += 0.005; //boost ao
+    metallic  += 0.005;
+    roughness += 0.005;
+
     // reflectance equation
     vec3 Lo = vec3(0.0);
     for(int i = 0; i < MAX_POINT_LIGHTS; i++)  {
@@ -317,7 +332,7 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
     }   
     
     Lo += vec3(CalcSpotLight(spotlight, albedo, normal, metallic, roughness, ao));
-    Lo += vec3(CalcDirLight(DirLight, albedo, normal, metallic)); //TODO fix
+    Lo += vec3(CalcDirLight(DirLight, albedo, normal, metallic));
 
      // ambient lighting (we now use IBL as the ambient term)
     vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);
@@ -348,47 +363,23 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
 
 void main() {   
 
-    vec4  l_albedo    = vec4(u_albedo, 1.f);
+    vec3  l_albedo    = u_albedo;
     vec3  l_normal    = vs_normal;
     float l_metallic  = u_metallic;
     float l_roughness = u_roughness;
     float l_ao        = u_ao;
 
-
     if(u_usePRB) {
-
-        if(material.m_HasAlbedoTexture) {
-            l_albedo = vec4(pow(texture(material.m_AlbedoTexture, vs_texcoord).rgb, vec3(2.2)), texture(material.m_AlbedoTexture, vs_texcoord).a);
-        } else {
-            l_albedo = vec4(material.m_Albedo, 1.f);     
-        };
-  
-        if(material.m_HasNormalTexture) {
-            l_normal =  GetNormalFromMap(material.m_NormalTexture);
-        } else {
-            l_normal = vs_normal;     
-        }
-
-        if(material.m_HasMetallicTexture) {
-            l_metallic = texture(material.m_MetallicTexture, vs_texcoord).r;
-        } else {
-            l_metallic = material.m_Metallic;     
-        }
-
-        if(material.m_HasRoughnessTexture) {
-            l_roughness = texture( material.m_RoughnessTexture, vs_texcoord).r;
-        } else {
-            l_roughness = material.m_Roughness;     
-        }
-  
-        if(material.m_HasAOTexture) {
-            l_ao = texture(material.m_AOTexture, vs_texcoord).r;
-        } else {
-            l_ao = material.m_AO;     
-        }
-
+        l_albedo    = pow(texture(u_AlbedoTexture, vs_texcoord).rgb, vec3(2.2));
+        l_normal    = GetNormalFromMap();  
+        l_metallic  = texture(u_MetallicTexture, vs_texcoord).r;
+        l_roughness = texture(u_RoughnessTexture, vs_texcoord).r;
+        l_ao        = texture(u_AOTexture, vs_texcoord).r;
     }
 
-    colour = vec4(CalculatePBR(l_albedo.xyz, l_normal, l_metallic, l_roughness, l_ao), l_albedo.a);
+     
+    colour = vec4(1.f);
 
+    
+       
 }

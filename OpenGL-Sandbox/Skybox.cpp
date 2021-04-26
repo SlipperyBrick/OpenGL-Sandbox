@@ -14,6 +14,7 @@ Skybox::Skybox() {
 
 Skybox::Skybox(Texture* cubemap)
 {
+
 	this->m_shader = new Shader();
 	m_shader->CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/SkyboxFrag.glsl");
 
@@ -22,6 +23,7 @@ Skybox::Skybox(Texture* cubemap)
 
 	m_cubemap = cubemap;
 	CreateMesh();
+
 }
 
 Skybox::~Skybox()

@@ -12,6 +12,7 @@
 
 #include "Mesh.h"
 #include "Texture.h"
+#include "Material.h"
 #include "Timer.hpp"
 
 
@@ -23,10 +24,15 @@ public:
 
 	void Load(const char* filepath);
 	void Create();
-	void Render();
+	void Render(Shader* shader);
 
 	void ResetModel();
 	glm::mat4 GetModelMatrix();
+
+	std::vector<Texture*> GetTextures() const;
+	std::vector<Material*> GetMaterials() const;
+
+	void SetMaterial(Material* material, unsigned int index);
 
 private:
 
@@ -34,9 +40,10 @@ private:
 
 	void LoadMesh(aiMesh* mesh, const aiScene* scene);
 
-	std::string GetFolderName(const aiScene* scene, const char* filepath);
+	std::string GetTextures(aiMaterial* aiMat, aiTextureType type, std::string typeName);
 
+	std::string m_path;
 	std::vector<Mesh*> m_meshes;
-	std::vector<Vertex> m_vertices;
-	std::vector<unsigned int> m_indices;
+	std::vector<Texture*> m_textures;
+	std::vector<Material*> m_materials;
 };

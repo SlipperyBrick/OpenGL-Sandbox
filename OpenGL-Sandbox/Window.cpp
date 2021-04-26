@@ -197,10 +197,14 @@ void Window::Init() {
 		std::cout << "[GLEW]: OK\n" << glGetString(GL_VERSION) << std::endl;
 
 	glEnable(GL_DEPTH_TEST);
+
 	glfwSetWindowUserPointer(m_window, this);
 	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
 	glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
+	glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ZERO);
 }

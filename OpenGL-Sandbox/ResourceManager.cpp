@@ -29,42 +29,66 @@ ResourceManager::~ResourceManager()
 
 void ResourceManager::Load(Texture* texture)
 {
+	std::string path = texture->GetPath();
+	if (m_textureMap.find(path) != m_textureMap.end()) {
+		texture = m_textureMap[path];
+		return;
+	}
+
+    m_textureMap[path] = texture;
 	m_textures.push_back(texture);
+}
+
+void ResourceManager::Load(std::vector<Texture*> textureArray)
+{
+	for (const auto t : textureArray)
+		Load(t);
+}
+
+void ResourceManager::Load(std::vector<Material*> materialArray)
+{
+	for (const auto m : materialArray)
+		Load(m);
 }
 
 void ResourceManager::Load(Material* material)
 {
-	if (!material->GetAlbedo()->GetPath().empty())
-		m_textures.push_back(material->GetAlbedo());
+	if (material->HasAlbedoTexture())
+		Load(material->GetAlbedo());
 	
-	if (!material->GetNormal()->GetPath().empty())
-		m_textures.push_back(material->GetNormal());
+	if (material->HasNormalTexture())
+		Load(material->GetNormal());
 
-	if (!material->GetRoughness()->GetPath().empty())
-		m_textures.push_back(material->GetRoughness());
+	if (material->HasRoughnessTexture())
+		Load(material->GetRoughness());
 
-	if (!material->GetMetallic()->GetPath().empty())
-		m_textures.push_back(material->GetMetallic());
+	if (material->HasMetallicTexture())
+		Load(material->GetMetallic());
 
-	if (!material->GetAO()->GetPath().empty())
-		m_textures.push_back(material->GetAO());
+	if (material->HasAOTexture())
+		Load(material->GetAO());
 
-	if (!material->GetDisplacement()->GetPath().empty())
-		m_textures.push_back(material->GetDisplacement());
+	if (material->HasDisplacementTexture()) 
+		Load(material->GetDisplacement());
+	
 
 }
 
 void ResourceManager::Update()
 {
+	
 	m_current = m_textures.size();
 	for (size_t i = 0; i < m_current - m_last; i++) { //TODO Make loop iterate once per frame
 		m_textureFutures.push_back(std::async(std::launch::async, LoadTexture, m_textures[m_last + i]));
 	}
+	m_last = m_current;
 
-	if (m_textureFutures[m_iter]._Is_ready() && m_iter < m_textures.size() - 1) {
-		m_textures[m_iter]->CreateTexture2D();
-		m_iter++;
+	if (m_iter != m_textures.size()) { 
+		if (m_textureFutures[m_iter]._Is_ready()) {
+			m_textures[m_iter]->CreateTexture2D();
+			m_iter++;
+		}
 	}
 
-	m_last = m_current;
+	
 }

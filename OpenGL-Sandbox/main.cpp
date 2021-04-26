@@ -27,9 +27,8 @@
 
 Random Random::s_Instance;
 
-
 #pragma region Create Window & Camera
-Window window("Window", false, 1460, 768);
+Window window("Window", true, 1460, 768);
 Camera camera(&window, glm::vec3(0.f, 2.f, 10.f), glm::vec3(0, 1, 0), 0, 0, 5, 110, 90.f);
 #pragma endregion
 
@@ -68,15 +67,9 @@ Texture Rock_Roughness("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Roughness
 Texture Rock_AO("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_AO.jpg");
 Texture Rock_Metallic("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Displacement.jpg");
 
-Texture Leather_Albedo("Textures/PBR/Studded Leather_tlooadar/Albedo_2K__tlooadar.png");
-Texture Leather_Normal("Textures/PBR/Studded Leather_tlooadar/Normal_2K__tlooadar.png");
-Texture Leather_Roughness("Textures/PBR/Studded Leather_tlooadar/Roughness_2K__tlooadar.png");
-Texture Leather_AO("Textures/PBR/Studded Leather_tlooadar/AO_2K__tlooadar.png");
-
 Material GoldMaterial(Gold_Albedo, Gold_Normal, Gold_Roughness, Gold_AO, Gold_Metallic);
-Material MarbleMaterial(Marble_Albedo, Marble_Normal, Marble_Roughness, Marble_AO);
+Material MarbleMaterial(Marble_Albedo, Marble_Normal, Marble_Roughness, Marble_AO, 1.f);
 Material RockMaterial(Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO, Rock_Metallic);
-Material LeatherMaterial(Leather_Albedo, Leather_Normal, Leather_Roughness, Leather_AO);
 
 Skybox skybox(&hdriCubemap);
 #pragma endregion
@@ -86,13 +79,15 @@ DirectionalLight dirLight(1024, 1024, 1, { 1, 1, 1 }, 0.f, { 0.5, -1, 0 });
 
 std::vector<PointLight> pointlights(1);
 
-SpotLight spotLight({ 0, 5, 0 }, { 1, 1, 1, 1 }, { 0, -1, 0 }, 40, 10, 1024, 1024, 0.1, 100);
+SpotLight spotLight({ 0, 5, 0 }, { 1, 1, 1, 0 }, { 0, -1, 0 }, 40, 10, 1024, 1024, 0.1, 50);
 #pragma endregion
 
 #pragma region Create Models
 Model monkey;
 Model sphere;
 Model quad;
+Model sponza;
+Model knuckles;
 #pragma endregion
 
 #pragma region Uniform Variables
@@ -138,8 +133,6 @@ static void PBRScene(Shader* shader) {
 	shader->Set1f("u_ao", ao);
 	shader->Set1i("u_usePRB", usePBR);
 
-	LeatherMaterial.Bind();
-
 	for (int row = 0; row < nrRows; row++) {
 
 		shader->Set1f("u_metallic", (float)row / (float)nrRows);
@@ -158,14 +151,15 @@ static void PBRScene(Shader* shader) {
 				0.0f));
 
 			shader->SetMat4f("u_Model", sphere.GetModel(), false);
-			sphere.Render();
+			sphere.Render(shader);
 		}
 	}
 
 }
 
+float rotateX = 0.1;
 static void RenderScene(Shader* shader) {
-	
+
 	skybox.Render(&camera);
 	shader->Bind();
 
@@ -180,38 +174,23 @@ static void RenderScene(Shader* shader) {
 	pointlights[0].Bind(shader, 0);
 
 	shader->Set1f("u_Time", glfwGetTime());
-	shader->SetVec3f("u_cameraPosition", (glm::vec3&)camera.GetCameraPosition());
-	shader->SetMat4f("u_View",           camera.GetViewMatrix(),  false);
-	shader->SetMat4f("u_Projection",     camera.GetProjectionMatrix(),  false);
+	shader->SetVec3f("u_cameraPosition", camera.GetCameraPosition());
+	shader->SetMat4f("u_View", camera.GetViewMatrix(), false);
+	shader->SetMat4f("u_Projection", camera.GetProjectionMatrix(), false);
 
 	shader->SetVec3f("u_albedo", albedo);
 	shader->Set1f("u_metallic", metallic);
 	shader->Set1f("u_roughness", roughness);
 	shader->Set1f("u_ao", ao);
 
-	MarbleMaterial.Bind();
-
 	shader->Set1i("u_usePRB", usePBR);
-	shader->SetMat4f("u_Model", sphere.GetModel(), false);
-	
-	sphere.Render();
-
-	MarbleMaterial.Bind();
-
-	shader->Set1i("u_usePRB", true);
-	shader->SetMat4f("u_Model", quad.GetModel(), false);
-	
-	quad.SetScale({ 5.f, 0.001, 5.f });
-	quad.SetTranslation({ 0.f, -2.5f, 0.f });
-	quad.SetRotation({ 180.f, 0.f, 0.f });
-	quad.Render();
+	sponza.Render(shader);
 
 }
 
 //Shadow Passes 
 static void DirectionalShadowMapPass(DirectionalLight* dirLight) {
 
-	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	dirShadowShader.Bind();
 	dirShadowShader.SetMat4f("u_DirectionLightTransform", dirLight->CalculateLightTransform(), false);
@@ -221,16 +200,13 @@ static void DirectionalShadowMapPass(DirectionalLight* dirLight) {
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	RenderScene(&dirShadowShader);
-	//PBRScene(&shader);
-	renderTarget.Bind(window);
-	glDisable(GL_CULL_FACE);
+
+	glCullFace(GL_BACK);
 };
 
 static void OmniShadowMapPass(PointLight* light) {
-
-	glEnable(GL_CULL_FACE);
+	
 	glCullFace(GL_FRONT);
-
 	omniShadowShader.Bind();
 
 	omniShadowShader.SetVec3f("u_lightPos", (glm::vec3&)light->GetPosition());
@@ -251,11 +227,8 @@ static void OmniShadowMapPass(PointLight* light) {
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	RenderScene(&omniShadowShader);
-	//PBRScene(&shader);
 
-	renderTarget.Bind(window);
-	glDisable(GL_CULL_FACE);
-
+	glCullFace(GL_BACK);
 }
 
 /* ~TODO~ 
@@ -266,13 +239,12 @@ static void OmniShadowMapPass(PointLight* light) {
 */
 
 int main() {
-
 	std::cout << "[MAIN]: " << std::this_thread::get_id() << "\n";
 
 	GuiLayer GuiLayer(window.GetWindow());
 
 	ResourceManager rManager;
-	pointlights[0] = PointLight({ 1, 1, 1, 0.f }, { 0.f, 5.0f, 0.0f }, 1024, 1024, 0.1, 100);
+	pointlights[0] = PointLight({ 1, 1, 1, 0.f }, { 0.f, 1.0f, 0.0f }, 1024, 1024, 0.01, 100);
 
 	shader.CreateFromFile("Shaders/Vertex.glsl", "Shaders/Frag.glsl");
 	dirShadowShader.CreateFromFile("Shaders/DirectionShadowMapVert.glsl", "Shaders/DirectionShadowMapFrag.glsl");
@@ -290,13 +262,15 @@ int main() {
 	rManager.Load(&GoldMaterial);
 	rManager.Load(&MarbleMaterial);
 	rManager.Load(&RockMaterial);
-	rManager.Load(&LeatherMaterial);
 
 #pragma endregion
 
 #pragma region Load Models
+
 	quad.Load("Models/quad.fbx");
 	quad.Create();
+	quad.SetScale({ 5, 0.1, 5 });
+	quad.SetTranslation({ 0, -2, 0 });
 
 	sphere.Load("Models/Sphere64.fbx");
 	sphere.Create();
@@ -304,8 +278,21 @@ int main() {
 	monkey.Load("Models/monkey.fbx");
 	monkey.Create();
 	monkey.SetRotation({260, 0, 0});
+
+	knuckles.Load("Models/Uganda_Knuckles/Uganda_Knuckles.obj");
+	knuckles.Create();
+	knuckles.SetScale(glm::vec3(0.01));
+
+	sponza.Load("Models/Sponza/sponza.fbx");
+	sponza.Create();
+	sponza.SetScale(glm::vec3(0.01f));
+
 #pragma endregion
-	 
+	
+
+	rManager.Load(sponza.GetMaterials());
+	rManager.Load(knuckles.GetMaterials());
+
 #pragma region Shader Texture Setup
 	shader.Bind();
 
@@ -318,16 +305,18 @@ int main() {
 	shader.Set1i("u_prefilterMap", TU_PREFILTER);
 	shader.Set1i("u_brdfLUT", TU_BRDF);
 
-	shader.Set1i("u_AlbedoTexture", TU_ALBEDO);
-	shader.Set1i("u_NormalTexture", TU_NORMAL);
-	shader.Set1i("u_RoughnessTexture", TU_ROUGHNESS );
-	shader.Set1i("u_AOTexture", TU_AO);
-	shader.Set1i("u_MetallicTexture", TU_METALLIC);
-	shader.Set1i("u_DisplacementTexture", TU_DISPLACEMENT);
+	shader.Set1i("material.m_AlbedoTexture", TU_ALBEDO);
+	shader.Set1i("material.m_NormalTexture", TU_NORMAL);
+	shader.Set1i("material.m_RoughnessTexture", TU_ROUGHNESS);
+	shader.Set1i("material.m_MetallicTexture", TU_METALLIC);
+	shader.Set1i("material.m_AOTexture", TU_AO);
+	shader.Set1i("material.m_DisplacementTexture", TU_DISPLACEMENT);
 
 	shader.Unbind();
-#pragma endregion
 
+#pragma endregion
+	
+	glEnable(GL_CULL_FACE);
 	while (window.IsOpen()) {
 		
 		window.Update();
@@ -335,15 +324,13 @@ int main() {
 		camera.Update();
 
 		renderTarget.Bind(window);
-
 		//Shadow Passes
-		DirectionalShadowMapPass(&dirLight);
+		//DirectionalShadowMapPass(&dirLight); //
 		OmniShadowMapPass(&pointlights[0]);
 		OmniShadowMapPass(&spotLight);
 
+		renderTarget.Bind(window);
 		RenderScene(&shader);
-		//PBRScene(&shader);
-
 		renderTarget.Unbind();
 	
 		if (window.UpdateOnFocus()) {
@@ -370,7 +357,7 @@ int main() {
 		
 				ImGui::ColorEdit3("Object Colour", (float*)&albedo);
 				ImGui::DragFloat("Metallic", &metallic, 0.01, 0.f, 1.f);
-				ImGui::DragFloat("AO", &ao, 0.01, 0.f, 1.f);
+				ImGui::DragFloat("AO", &ao, 0.01, 0.05f, 1.f);
 				ImGui::DragFloat("Roughness", &roughness, 0.01, 0.f, 1.f);
 				
 			}

@@ -2,6 +2,9 @@
 
 RenderTarget::RenderTarget(unsigned int width, unsigned int height) {
 	
+	m_BufferHeight = height;
+	m_BufferWidth = width;
+
 	// Generate and bind a framebuffer
 	glGenFramebuffers(1, &m_FBO);
 	glBindFramebuffer(GL_FRAMEBUFFER, m_FBO);
