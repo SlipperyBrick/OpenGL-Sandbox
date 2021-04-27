@@ -91,11 +91,11 @@ Model knuckles;
 #pragma endregion
 
 #pragma region Uniform Variables
-static bool usePBR = false;
+static bool usePBR = true;
 
 static bool spotlightFlickering = false;
 static float spotlightFlickeringSpeed = 1.f;
-
+   
 static bool u_MonochromeToggle = false;
 static bool u_WobbleToggle = false;
 static bool u_BlurToggle = false;

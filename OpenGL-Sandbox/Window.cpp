@@ -197,7 +197,7 @@ void Window::Init() {
 		std::cout << "[GLEW]: OK\n" << glGetString(GL_VERSION) << std::endl;
 
 	glEnable(GL_DEPTH_TEST);
-
+	
 	glfwSetWindowUserPointer(m_window, this);
 	glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
 
