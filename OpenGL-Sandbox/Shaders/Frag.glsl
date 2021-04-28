@@ -220,14 +220,13 @@ vec3 CalcDirLight(DirectionLight light, vec3 albedo, vec3 normal, float metallic
 
     vec3 view = (vs_cameraPosition - vs_position);
 
-    vec3 F0 = vec3(0.04); 
-    F0 = mix(F0, albedo, metallic);
+
     vec3 L = normalize(-light.m_direction);
 
     float NoL = clamp(dot(normal, L), 0.0, 1.0);
     float illuminance = light.m_colour.w * NoL;
 
-    return  (1.0 - CalcDirectionalShadowFactor(light, normal)) * (F0 * light.m_colour.xyz * vec3(illuminance));
+    return  (1.0 - CalcDirectionalShadowFactor(light, normal)) * (albedo * light.m_colour.rgb * vec3(illuminance));
 
 } 
 

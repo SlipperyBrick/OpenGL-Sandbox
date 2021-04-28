@@ -372,8 +372,11 @@ int main() {
 
 			if (ImGui::CollapsingHeader("Camera Options")) {
 				glm::vec3 pos = camera.GetCameraPosition();
+				glm::vec3 dir = camera.GetCameraDirection();
 				std::string posStr = "Position: ";
+				std::string dirStr = "Direction: ";
 				ImGui::Text(posStr.append(std::to_string(pos.x) + ", " + std::to_string(pos.y) + ", " + std::to_string(pos.z)).c_str());
+				ImGui::Text(dirStr.append(std::to_string(dir.x) + ", " + std::to_string(dir.y) + ", " + std::to_string(dir.z)).c_str());
 			}
 
 			if (ImGui::CollapsingHeader("Texture Options")) {
