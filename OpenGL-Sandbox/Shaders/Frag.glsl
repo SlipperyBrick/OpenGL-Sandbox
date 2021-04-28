@@ -149,7 +149,7 @@ float CalcDirectionalShadowFactor(DirectionLight light, vec3 normal) {
     }
 
 	vec3 lightDir = normalize(-light.m_direction);
-    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);  
+    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.001);  
 
 	float shadow = 0.0;
 
@@ -170,29 +170,7 @@ float CalcDirectionalShadowFactor(DirectionLight light, vec3 normal) {
 	return shadow;
 }
 
-vec3 CalcDirLight(DirectionLight light, vec3 albedo, vec3 normal, float metallic) {
- 
-    vec3 lightDir = normalize(light.m_direction);
-    vec3 viewDir = (vs_cameraPosition - vs_position);
 
-    // diffuse shading
-    float diff = max(dot(normal, lightDir), 0.0);
-
-    // specular shading
-    vec3 reflectDir = reflect(lightDir, normal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 1.f);
-
-    vec3 F0 = vec3(0.04); 
-    F0 = mix(F0, albedo, metallic);
-
-    // combine results
-    vec3 ambient  = light.m_colour.rgb * light.m_colour.w * F0;
-    vec3 diffuse  = light.m_colour.rgb * light.m_colour.w * diff * F0;
-    vec3 specular = light.m_colour.rgb * light.m_colour.w * spec  * metallic;
-
-    return  ((1.0 - CalcDirectionalShadowFactor(DirLight, normal)) * (diffuse + specular));
-
-} 
 
 
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
@@ -237,6 +215,21 @@ vec3 fresnelSchlickRoughness(float cosTheta, vec3 F0, float roughness) {
 
     return F0 + (max(vec3(1.0 - roughness), F0) - F0) * pow(max(1.0 - cosTheta, 0.0), 5.0);
 }   
+
+vec3 CalcDirLight(DirectionLight light, vec3 albedo, vec3 normal, float metallic, float roughness) {
+
+    vec3 view = (vs_cameraPosition - vs_position);
+
+    vec3 F0 = vec3(0.04); 
+    F0 = mix(F0, albedo, metallic);
+    vec3 L = normalize(-light.m_direction);
+
+    float NoL = clamp(dot(normal, L), 0.0, 1.0);
+    float illuminance = light.m_colour.w * NoL;
+
+    return  (1.0 - CalcDirectionalShadowFactor(light, normal)) * (F0 * light.m_colour.xyz * vec3(illuminance));
+
+} 
 
 vec3 CalcPointLight(PointLight light, vec3 view, vec3 albedo, vec3 normal, float roughness, float metallic, vec3 F0) {
 
@@ -317,7 +310,7 @@ vec3 CalculatePBR(vec3 albedo, vec3 normal, float metallic, float roughness, flo
     }   
     
     Lo += vec3(CalcSpotLight(spotlight, albedo, normal, metallic, roughness, ao));
-    Lo += vec3(CalcDirLight(DirLight, albedo, normal, metallic)); //TODO fix
+    Lo += vec3(CalcDirLight(DirLight, albedo, normal, metallic, roughness)); //TODO fix
 
      // ambient lighting (we now use IBL as the ambient term)
     vec3 F = fresnelSchlickRoughness(max(dot(N, V), 0.0), F0, roughness);

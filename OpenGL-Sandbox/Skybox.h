@@ -4,7 +4,6 @@
 #include <string>
 
 #include <gl/glew.h>
-#include <SOIL2/SOIL2.h>
 #include <glm/glm.hpp>
 
 #include "Mesh.h"

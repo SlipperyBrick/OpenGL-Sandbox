@@ -10,9 +10,9 @@ Material::Material() {
 	m_displacement = nullptr;
 
 	m_albedoColour = glm::vec3(1.f, 1.f, 1.f);
-	m_roughnessValue = 1.f;
-	m_aoValue = 1.f;
-	m_metallicValue = 1.f;
+	m_roughnessValue = 0.5f;
+	m_aoValue = 0.5f;
+	m_metallicValue = 0.5f;
 
 	m_hasAlbedoTexture = false;
 	m_hasNormalTexture = false;

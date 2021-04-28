@@ -29,6 +29,7 @@ void Model::Load(const char* filepath) {
 	else {
 		printf("[MODEL LOADER]: Opening - %s \n", filepath);
 		LoadNode(scene->mRootNode, scene);
+
 	}
 
 }
@@ -45,6 +46,7 @@ void Model::Render(Shader* shader)
 		m_materials[i]->Bind(shader);
 		m_meshes[i]->Render();
 	}
+
 }
 
 void Model::ResetModel()
@@ -150,8 +152,8 @@ void Model::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 
 		if (!normalStr.empty()) {
 			Texture* t = new Texture(normalStr);
-			l_material->UseNormalTexture(true);
 			l_material->SetNormal(t);
+			l_material->UseNormalTexture(true);
 			m_textures.push_back(t);
 		}
 

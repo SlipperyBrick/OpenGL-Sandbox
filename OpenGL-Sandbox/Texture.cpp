@@ -82,7 +82,6 @@ void Texture::CreateTexture2D()
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 		glBindTexture(this->m_textureType, 0);
-		delete m_data2D;
 
 	} else {
 		
@@ -91,6 +90,8 @@ void Texture::CreateTexture2D()
 		} 
 		std::cout << "[ERROR]: No texture data - " << m_path.c_str() << "\n";
 	}
+
+	stbi_image_free(m_data2D);
 
 }
 
@@ -165,7 +166,7 @@ void Texture::LoadCubemap(const char* rightFace, const char* leftFace,
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	//glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+	glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 	glBindTexture(GL_TEXTURE_2D, NULL);
 
 }

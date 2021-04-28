@@ -67,6 +67,13 @@ Texture Rock_Roughness("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Roughness
 Texture Rock_AO("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_AO.jpg");
 Texture Rock_Metallic("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Displacement.jpg");
 
+
+Texture Fabric_Albedo("Models/Sponza/textures/sponza_curtain_green_diff.png");
+Texture Fabric_Normal("Models/Sponza/textures/sponza_curtain_ddn.jpg");
+Texture Fabric_metal("Models/Sponza/textures/sponza_curtain_spec.png");
+Texture Fabric_roughness("Models/Sponza/textures/sponza_curtain_roughness.png");
+Material fabricMaterial;
+
 Material GoldMaterial(Gold_Albedo, Gold_Normal, Gold_Roughness, Gold_AO, Gold_Metallic);
 Material MarbleMaterial(Marble_Albedo, Marble_Normal, Marble_Roughness, Marble_AO, 1.f);
 Material RockMaterial(Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO, Rock_Metallic);
@@ -75,7 +82,7 @@ Skybox skybox(&hdriCubemap);
 #pragma endregion
 
 #pragma region Create Lights
-DirectionalLight dirLight(1024, 1024, 1, { 1, 1, 1 }, 0.f, { 0.5, -1, 0 });
+DirectionalLight dirLight(4024, 4024, 1, { 1, 1, 1 }, 0.f, { 0.5, -1, 0 });
 
 std::vector<PointLight> pointlights(1);
 
@@ -184,14 +191,18 @@ static void RenderScene(Shader* shader) {
 	shader->Set1f("u_ao", ao);
 
 	shader->Set1i("u_usePRB", usePBR);
-	sponza.Render(shader);
 
+	fabricMaterial.Bind(shader);
+	sponza.Render(shader);
+	
+	auto r = sphere.GetRotation();
+	sphere.SetRotation({ r.x, r.y += 5 * window.GetDeltaTime(), r.z });
 }
 
 //Shadow Passes 
 static void DirectionalShadowMapPass(DirectionalLight* dirLight) {
 
-	glCullFace(GL_FRONT);
+
 	dirShadowShader.Bind();
 	dirShadowShader.SetMat4f("u_DirectionLightTransform", dirLight->CalculateLightTransform(), false);
 
@@ -201,12 +212,12 @@ static void DirectionalShadowMapPass(DirectionalLight* dirLight) {
 
 	RenderScene(&dirShadowShader);
 
-	glCullFace(GL_BACK);
+
 };
 
 static void OmniShadowMapPass(PointLight* light) {
 	
-	glCullFace(GL_FRONT);
+	//glCullFace(GL_FRONT);
 	omniShadowShader.Bind();
 
 	omniShadowShader.SetVec3f("u_lightPos", (glm::vec3&)light->GetPosition());
@@ -228,7 +239,7 @@ static void OmniShadowMapPass(PointLight* light) {
 
 	RenderScene(&omniShadowShader);
 
-	glCullFace(GL_BACK);
+	//glCullFace(GL_BACK);
 }
 
 /* ~TODO~ 
@@ -259,9 +270,19 @@ int main() {
 	prefilterMap.CreatePrefilterMap(&hdriCubemap);
 	brdfLUTMap.CreateBRDFLookUpTable();
 
+	fabricMaterial.SetAlbedo(&Fabric_Albedo);
+	fabricMaterial.UseAlbedoTexture(true);
+	fabricMaterial.SetNormal(&Fabric_Normal);
+	fabricMaterial.UseNormalTexture(true);
+	fabricMaterial.SetMetallic(&Fabric_metal);
+	fabricMaterial.UseMetallicTexture(true);
+	fabricMaterial.SetRoughness(&Fabric_roughness);
+	fabricMaterial.UseRoughnessTexture(true);
+
 	rManager.Load(&GoldMaterial);
 	rManager.Load(&MarbleMaterial);
 	rManager.Load(&RockMaterial);
+	rManager.Load(&fabricMaterial);
 
 #pragma endregion
 
@@ -271,19 +292,16 @@ int main() {
 	quad.Create();
 	quad.SetScale({ 5, 0.1, 5 });
 	quad.SetTranslation({ 0, -2, 0 });
-
+	
 	sphere.Load("Models/Sphere64.fbx");
-	sphere.Create();
-
+	
 	monkey.Load("Models/monkey.fbx");
-	monkey.Create();
 	monkey.SetRotation({260, 0, 0});
-
+	
 	knuckles.Load("Models/Uganda_Knuckles/Uganda_Knuckles.obj");
-	knuckles.Create();
 	knuckles.SetScale(glm::vec3(0.01));
-
-	sponza.Load("Models/Sponza/sponza.fbx");
+	
+	sponza.Load("Models/Sponza/sponza.obj");
 	sponza.Create();
 	sponza.SetScale(glm::vec3(0.01f));
 
@@ -325,7 +343,7 @@ int main() {
 
 		renderTarget.Bind(window);
 		//Shadow Passes
-		//DirectionalShadowMapPass(&dirLight); //
+		DirectionalShadowMapPass(&dirLight); 
 		OmniShadowMapPass(&pointlights[0]);
 		OmniShadowMapPass(&spotLight);
 
@@ -352,6 +370,12 @@ int main() {
 				ImGui::Checkbox("Monochrome", &u_MonochromeToggle);
 			}
 
+			if (ImGui::CollapsingHeader("Camera Options")) {
+				glm::vec3 pos = camera.GetCameraPosition();
+				std::string posStr = "Position: ";
+				ImGui::Text(posStr.append(std::to_string(pos.x) + ", " + std::to_string(pos.y) + ", " + std::to_string(pos.z)).c_str());
+			}
+
 			if (ImGui::CollapsingHeader("Texture Options")) {
 				ImGui::Checkbox("Use PBR Textures", &usePBR);
 		
@@ -362,17 +386,17 @@ int main() {
 				
 			}
 
-			if (ImGui::CollapsingHeader("PointLight Options")) {
-				ImGui::DragFloat3("PL Position", (float*)pointlights[0].GetPositionPtr(), 0.01, -25, 25);
-				ImGui::ColorEdit3("PL Colour", (float*)pointlights[0].GetColourPtr());
-				ImGui::SliderFloat("PL Intensity", pointlights[0].GetIntensityPtr(), 0.f, 5000.f);
-			}
-
 			if (ImGui::CollapsingHeader("DirectionLight Options")) {
 				ImGui::ColorEdit3("DL Intensity", (float*)dirLight.GetColourPtr());
 				ImGui::SliderFloat3("DL Direction", (float*)(dirLight.GetDirectionPtr()), -1.f, 1.f);
 				ImGui::DragInt("DL Shadow Filter Level", dirLight.GetFilterLevelPtr(), 1.f, 0.f, 10);
-				ImGui::SliderFloat("DL Intensity", dirLight.GetIntensityPtr(), 0.f, 1.f);
+				ImGui::SliderFloat("DL Intensity", dirLight.GetIntensityPtr(), 0.f, 10.f);
+			}
+
+			if (ImGui::CollapsingHeader("PointLight Options")) {
+				ImGui::DragFloat3("PL Position", (float*)pointlights[0].GetPositionPtr(), 0.01, -25, 25);
+				ImGui::ColorEdit3("PL Colour", (float*)pointlights[0].GetColourPtr());
+				ImGui::SliderFloat("PL Intensity", pointlights[0].GetIntensityPtr(), 0.f, 5000.f);
 			}
 
 			if (ImGui::CollapsingHeader("SpotLight Options")) {
@@ -396,6 +420,7 @@ int main() {
 		quadShader.Bind();
 		
 		renderTarget.GetTexture()->Bind(0);
+		https://google.github.io/filament/Filament.md.html#listing_glsldirectionallight
 		quadShader.Set1i("u_Frame", 0);
 
 		quadShader.Set1i("u_BlurToggle", u_BlurToggle);
