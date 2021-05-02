@@ -120,10 +120,10 @@ float CalcOmniShadowFactor(PointLight light, int index) {
 
     float shadow = 0.f;
     float bias = 0.05;
-    int samples = 40;
+    int samples = 20;
 
     float viewDirection = length(vs_cameraPosition - vs_position);
-    float radius = (1.f + (viewDirection / light.m_omniFarPlane)) / 100.f;
+    float radius = (1.f + (viewDirection / light.m_omniFarPlane)) / 25.f;
 
     for(int i = 0; i < samples; i++) {
         float closestDepth = texture(light.m_omniShadowMap, lightDir + sampleOffsetDirections[i] * radius).r;
@@ -346,39 +346,38 @@ void main() {
     float l_roughness = u_roughness;
     float l_ao        = u_ao;
 
-
     if(u_usePRB) {
-
+    
         if(material.m_HasAlbedoTexture) {
             l_albedo = vec4(pow(texture(material.m_AlbedoTexture, vs_texcoord).rgb, vec3(2.2)), texture(material.m_AlbedoTexture, vs_texcoord).a);
         } else {
             l_albedo = vec4(material.m_Albedo, 1.f);     
         };
-  
+    
         if(material.m_HasNormalTexture) {
             l_normal =  GetNormalFromMap(material.m_NormalTexture);
         } else {
             l_normal = vs_normal;     
         }
-
+    
         if(material.m_HasMetallicTexture) {
-            l_metallic = texture(material.m_MetallicTexture, vs_texcoord).r;
+          l_metallic = texture(material.m_MetallicTexture, vs_texcoord).r;
         } else {
-            l_metallic = material.m_Metallic;     
+          l_metallic = material.m_Metallic;     
         }
-
+    
         if(material.m_HasRoughnessTexture) {
             l_roughness = texture( material.m_RoughnessTexture, vs_texcoord).r;
         } else {
             l_roughness = material.m_Roughness;     
         }
-  
+    
         if(material.m_HasAOTexture) {
             l_ao = texture(material.m_AOTexture, vs_texcoord).r;
         } else {
             l_ao = material.m_AO;     
         }
-
+    
     }
 
     colour = vec4(CalculatePBR(l_albedo.xyz, l_normal, l_metallic, l_roughness, l_ao), l_albedo.a);

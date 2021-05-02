@@ -29,7 +29,7 @@ Random Random::s_Instance;
 
 #pragma region Create Window & Camera
 Window window("Window", true, 1460, 768);
-Camera camera(&window, glm::vec3(0.f, 2.f, 10.f), glm::vec3(0, 1, 0), 0, 0, 5, 110, 90.f);
+Camera camera(&window, glm::vec3(0.f, 2.f, 5.f), glm::vec3(0, 1, 0), 0, 0, 5, 110, 90.f);
 #pragma endregion
 
 #pragma region Create Shader
@@ -49,11 +49,11 @@ Texture irradianceCubemap;
 Texture prefilterMap;
 Texture brdfLUTMap;
 
-Texture Gold_Albedo("Textures/PBR/Gold (Au)_schvfgwp_Metal/Albedo_4K__schvfgwp.jpg");
-Texture Gold_Normal("Textures/PBR/Gold (Au)_schvfgwp_Metal/Normal_4K__schvfgwp.jpg");
+Texture Gold_Albedo	  ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Albedo_4K__schvfgwp.jpg");
+Texture Gold_Normal	  ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Normal_4K__schvfgwp.jpg");
 Texture Gold_Roughness("Textures/PBR/Gold (Au)_schvfgwp_Metal/Roughness_4K__schvfgwp.jpg");
-Texture Gold_AO("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
-Texture Gold_Metallic("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
+Texture Gold_AO		  ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
+Texture Gold_Metallic ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
 
 Texture Marble_Albedo   ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Albedo.jpg");
 Texture Marble_Normal   ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Normal.jpg");
@@ -67,22 +67,35 @@ Texture Rock_Roughness("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Roughness
 Texture Rock_AO("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_AO.jpg");
 Texture Rock_Metallic("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Displacement.jpg");
 
+Texture Brick_Albedo("Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/Albedo_4K__th5mdawaw.png");
+Texture Brick_Normal("Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/Normal_4K__th5mdawaw.png");
+Texture Brick_Roughness("Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/Roughness_4K__th5mdawaw.png");
+Texture Brick_AO("Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/AO_4K__th5mdawaw.png");
 
-Texture Fabric_Albedo("Models/Sponza/textures/sponza_curtain_green_diff.png");
-Texture Fabric_Normal("Models/Sponza/textures/sponza_curtain_ddn.jpg");
-Texture Fabric_metal("Models/Sponza/textures/sponza_curtain_spec.png");
-Texture Fabric_roughness("Models/Sponza/textures/sponza_curtain_roughness.png");
-Material fabricMaterial;
+Texture Stone_Tiles_Albedo("Textures/PBR/Stone Tile 2x2_ujzjdcao/Albedo_4K__ujzjdcao.png");
+Texture Stone_Tiles_Normal("Textures/PBR/Stone Tile 2x2_ujzjdcao/Normal_4K__ujzjdcao.png");
+Texture Stone_Tiles_Roughness("Textures/PBR/Stone Tile 2x2_ujzjdcao/Roughness_4K__ujzjdcao.png");
+Texture Stone_Tiles_AO("Textures/PBR/Stone Tile 2x2_ujzjdcao/AO_4K__ujzjdcao.png");
 
-Material GoldMaterial(Gold_Albedo, Gold_Normal, Gold_Roughness, Gold_AO, Gold_Metallic);
-Material MarbleMaterial(Marble_Albedo, Marble_Normal, Marble_Roughness, Marble_AO, 1.f);
-Material RockMaterial(Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO, Rock_Metallic);
+Texture Stone_Pavement_Albedo	 ("Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/Albedo_4K__ujwnafvew.png");
+Texture Stone_Pavement_Normal	 ("Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/Normal_4K__ujwnafvew.png");
+Texture Stone_Pavement_Roughness("Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/Roughness_4K__ujwnafvew.png");
+Texture Stone_Pavement_AO       ("Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/AO_4K__ujwnafvew.png");
+
+
+Material GoldMaterial("Gold Material", Gold_Albedo,   Gold_Normal,   Gold_Roughness,   Gold_AO,   Gold_Metallic);
+Material MarbleMaterial("Marble Material", Marble_Albedo, Marble_Normal, Marble_Roughness, Marble_AO, 1.f);
+Material RockMaterial("Rock Material", Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO, Rock_Metallic);
+Material BrickMaterial("Brick Material", Brick_Albedo, Brick_Normal, Brick_Roughness, Brick_AO, 0.f);
+Material StoneTilesMaterial("Stone Trim Material", Stone_Tiles_Albedo, Stone_Tiles_Normal, Stone_Tiles_Roughness, Stone_Tiles_AO, 0.1f);
+Material StonePavementMaterial("Stone Pavement Material", Stone_Pavement_Albedo, Stone_Pavement_Normal, Stone_Pavement_Roughness, Stone_Pavement_AO, 0.1f);
+
 
 Skybox skybox(&hdriCubemap);
 #pragma endregion
 
 #pragma region Create Lights
-DirectionalLight dirLight(4024, 4024, 1, { 1, 1, 1 }, 0.f, { 0.5, -1, 0 });
+DirectionalLight dirLight(2024, 2024, 1, { 1, 1, 1 }, 0.f, { 0.5, -1, 0 });
 
 std::vector<PointLight> pointlights(1);
 
@@ -90,11 +103,11 @@ SpotLight spotLight({ 0, 5, 0 }, { 1, 1, 1, 0 }, { 0, -1, 0 }, 40, 10, 1024, 102
 #pragma endregion
 
 #pragma region Create Models
-Model monkey;
-Model sphere;
-Model quad;
-Model sponza;
-Model knuckles;
+Model quad("Models/quad.fbx", "Quad");
+Model monkey("Models/monkey.fbx", "Monkey");
+Model sphere("Models/Sphere64.fbx", "Sphere");
+Model sponza("Models/Sponza/sponza.obj", "Sponza");
+Model knuckles("Models/Uganda_Knuckles/Uganda_Knuckles.obj", "Knuckles");
 #pragma endregion
 
 #pragma region Uniform Variables
@@ -157,14 +170,13 @@ static void PBRScene(Shader* shader) {
 				(row - (nrRows / 2)) * spacing,
 				0.0f));
 
-			shader->SetMat4f("u_Model", sphere.GetModel(), false);
+			shader->SetMat4f("u_Model", sphere.GetModelMatrix(), false);
 			sphere.Render(shader);
 		}
 	}
 
 }
 
-float rotateX = 0.1;
 static void RenderScene(Shader* shader) {
 
 	skybox.Render(&camera);
@@ -191,18 +203,17 @@ static void RenderScene(Shader* shader) {
 	shader->Set1f("u_ao", ao);
 
 	shader->Set1i("u_usePRB", usePBR);
-
-	fabricMaterial.Bind(shader);
 	sponza.Render(shader);
-	
-	auto r = sphere.GetRotation();
-	sphere.SetRotation({ r.x, r.y += 5 * window.GetDeltaTime(), r.z });
+
+	//shader->Set1i("u_usePRB", usePBR);
+	//quad.Render(shader);
+
 }
 
 //Shadow Passes 
 static void DirectionalShadowMapPass(DirectionalLight* dirLight) {
 
-
+	glCullFace(GL_FRONT);
 	dirShadowShader.Bind();
 	dirShadowShader.SetMat4f("u_DirectionLightTransform", dirLight->CalculateLightTransform(), false);
 
@@ -211,13 +222,13 @@ static void DirectionalShadowMapPass(DirectionalLight* dirLight) {
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	RenderScene(&dirShadowShader);
-
+	glCullFace(GL_BACK);
 
 };
 
 static void OmniShadowMapPass(PointLight* light) {
 	
-	//glCullFace(GL_FRONT);
+	glCullFace(GL_FRONT);
 	omniShadowShader.Bind();
 
 	omniShadowShader.SetVec3f("u_lightPos", (glm::vec3&)light->GetPosition());
@@ -239,7 +250,7 @@ static void OmniShadowMapPass(PointLight* light) {
 
 	RenderScene(&omniShadowShader);
 
-	//glCullFace(GL_BACK);
+	glCullFace(GL_BACK);
 }
 
 /* ~TODO~ 
@@ -252,10 +263,18 @@ static void OmniShadowMapPass(PointLight* light) {
 int main() {
 	std::cout << "[MAIN]: " << std::this_thread::get_id() << "\n";
 
+	std::vector<Material*> materialList;
+
+	materialList.push_back(&MarbleMaterial);
+	materialList.push_back(&GoldMaterial);
+	materialList.push_back(&RockMaterial);
+	materialList.push_back(&BrickMaterial);
+	materialList.push_back(&StoneTilesMaterial);
+	materialList.push_back(&StonePavementMaterial);
 	GuiLayer GuiLayer(window.GetWindow());
 
 	ResourceManager rManager;
-	pointlights[0] = PointLight({ 1, 1, 1, 0.f }, { 0.f, 1.0f, 0.0f }, 1024, 1024, 0.01, 100);
+	pointlights[0] = PointLight({ 1, 1, 1, 0.f }, { 0.f, 5.0f, 0.0f }, 1024, 1024, 0.0, 100);
 
 	shader.CreateFromFile("Shaders/Vertex.glsl", "Shaders/Frag.glsl");
 	dirShadowShader.CreateFromFile("Shaders/DirectionShadowMapVert.glsl", "Shaders/DirectionShadowMapFrag.glsl");
@@ -270,47 +289,34 @@ int main() {
 	prefilterMap.CreatePrefilterMap(&hdriCubemap);
 	brdfLUTMap.CreateBRDFLookUpTable();
 
-	fabricMaterial.SetAlbedo(&Fabric_Albedo);
-	fabricMaterial.UseAlbedoTexture(true);
-	fabricMaterial.SetNormal(&Fabric_Normal);
-	fabricMaterial.UseNormalTexture(true);
-	fabricMaterial.SetMetallic(&Fabric_metal);
-	fabricMaterial.UseMetallicTexture(true);
-	fabricMaterial.SetRoughness(&Fabric_roughness);
-	fabricMaterial.UseRoughnessTexture(true);
-
 	rManager.Load(&GoldMaterial);
 	rManager.Load(&MarbleMaterial);
 	rManager.Load(&RockMaterial);
-	rManager.Load(&fabricMaterial);
+	rManager.Load(&BrickMaterial);
+	rManager.Load(&StoneTilesMaterial);
+	rManager.Load(&StonePavementMaterial);
 
 #pragma endregion
 
 #pragma region Load Models
 
-	quad.Load("Models/quad.fbx");
-	quad.Create();
-	quad.SetScale({ 5, 0.1, 5 });
+
+	quad.SetScale({ 5, 0.01, 5 });
 	quad.SetTranslation({ 0, -2, 0 });
-	
-	sphere.Load("Models/Sphere64.fbx");
-	
-	monkey.Load("Models/monkey.fbx");
 	monkey.SetRotation({260, 0, 0});
-	
-	knuckles.Load("Models/Uganda_Knuckles/Uganda_Knuckles.obj");
 	knuckles.SetScale(glm::vec3(0.01));
-	
-	sponza.Load("Models/Sponza/sponza.obj");
-	sponza.Create();
 	sponza.SetScale(glm::vec3(0.01f));
+
+
+	rManager.Load(&sponza);
+	rManager.Load(&knuckles);
+	rManager.Load(&monkey);
+	rManager.Load(&sphere);
+	rManager.Load(&quad);
 
 #pragma endregion
 	
-
-	rManager.Load(sponza.GetMaterials());
-	rManager.Load(knuckles.GetMaterials());
-
+	
 #pragma region Shader Texture Setup
 	shader.Bind();
 
@@ -326,8 +332,8 @@ int main() {
 	shader.Set1i("material.m_AlbedoTexture", TU_ALBEDO);
 	shader.Set1i("material.m_NormalTexture", TU_NORMAL);
 	shader.Set1i("material.m_RoughnessTexture", TU_ROUGHNESS);
-	shader.Set1i("material.m_MetallicTexture", TU_METALLIC);
 	shader.Set1i("material.m_AOTexture", TU_AO);
+	shader.Set1i("material.m_MetallicTexture", TU_METALLIC);
 	shader.Set1i("material.m_DisplacementTexture", TU_DISPLACEMENT);
 
 	shader.Unbind();
@@ -336,9 +342,9 @@ int main() {
 	
 	glEnable(GL_CULL_FACE);
 	while (window.IsOpen()) {
-		
+
 		window.Update();
-		rManager.Update();
+		rManager.Update(materialList);
 		camera.Update();
 
 		renderTarget.Bind(window);
@@ -359,6 +365,12 @@ int main() {
 		// GUI //
 		{
 			GuiLayer.Begin();
+
+			ImGui::Begin("Models");
+			sphere.Update(materialList);
+			quad.Update(materialList);
+			sponza.Update(materialList);
+			ImGui::End();
 
 			ImGui::Begin("GUI");
 			ImGui::Text("Application average %.2f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
@@ -399,7 +411,7 @@ int main() {
 			if (ImGui::CollapsingHeader("PointLight Options")) {
 				ImGui::DragFloat3("PL Position", (float*)pointlights[0].GetPositionPtr(), 0.01, -25, 25);
 				ImGui::ColorEdit3("PL Colour", (float*)pointlights[0].GetColourPtr());
-				ImGui::SliderFloat("PL Intensity", pointlights[0].GetIntensityPtr(), 0.f, 5000.f);
+				ImGui::DragFloat("PL Intensity", pointlights[0].GetIntensityPtr(), 1.f, 0, 5000);
 			}
 
 			if (ImGui::CollapsingHeader("SpotLight Options")) {

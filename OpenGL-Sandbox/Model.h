@@ -19,26 +19,29 @@
 #include "Texture.h"
 #include "Material.h"
 #include "Timer.hpp"
-
+#include "GuiLayer.h"
+#include "Window.h"
 
 class Model : public Entity
 {
 public:
 	Model();
+	Model(const char* path, const char* name);
 	~Model();
 
-	void Load(const char* filepath);
+	void Load();
 	void Create();
 	void Render(Shader* shader);
 
 	void ResetModel();
 	glm::mat4 GetModelMatrix();
 
-	std::vector<Texture*> GetTextures() const;
+	void Update(std::vector<Material*>& materials);
+
 	std::vector<Material*> GetMaterials() const;
 
-	void SetMaterial(Material* material, unsigned int index);
-
+	void SetMaterial(Material* material);
+	std::string GetPath() const { return m_path; };
 private:
 
 	void LoadNode(aiNode* node, const aiScene* scene);
@@ -47,7 +50,7 @@ private:
 
 	std::string GetTextures(aiMaterial* aiMat, aiTextureType type, std::string typeName);
 
-	std::string m_path;
+	std::string m_path, m_name;
 	std::vector<Mesh*> m_meshes;
 	std::vector<Texture*> m_textures;
 	std::vector<Material*> m_materials;

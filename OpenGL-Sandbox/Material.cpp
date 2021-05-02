@@ -23,8 +23,9 @@ Material::Material() {
 
 }
 
-Material::Material(Texture& albedo)
+Material::Material(const char* name, Texture& albedo)
 {
+	m_name = name;
 	m_albedo = &albedo;
 	m_normal = nullptr;
 	m_roughness = nullptr;
@@ -45,8 +46,9 @@ Material::Material(Texture& albedo)
 	m_hasDisplacementTexture = false;
 }
 
-Material::Material(glm::vec3 albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic)
+Material::Material(const char* name, glm::vec3 albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic)
 {
+	m_name = name;
 	m_albedo = nullptr;
 	m_normal = &normal;
 	m_roughness = &roughness;
@@ -67,8 +69,9 @@ Material::Material(glm::vec3 albedo, Texture& normal, Texture& roughness, Textur
 	m_hasDisplacementTexture = false;
 }
 
-Material::Material(Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic)
+Material::Material(const char* name, Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic)
 {
+	m_name = name;
 	m_albedo = &albedo;
 	m_normal = &normal;
 	m_roughness = &roughness;
@@ -78,8 +81,8 @@ Material::Material(Texture& albedo, Texture& normal, Texture& roughness, Texture
 
 	m_albedoColour = glm::vec3(1.f);
 	m_roughnessValue = 0.5f;
-	m_aoValue = 0.5f;
-	m_metallicValue = 0.5f;
+	m_aoValue = 1.f;
+	m_metallicValue = 1.f;
 
 	m_hasAlbedoTexture = true;
 	m_hasNormalTexture = true;
@@ -90,8 +93,9 @@ Material::Material(Texture& albedo, Texture& normal, Texture& roughness, Texture
 
 }
 
-Material::Material(Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, float metallic)
+Material::Material(const char* name, Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, float metallic)
 {
+	m_name = name;
 	m_albedo = &albedo;
 	m_normal = & normal;
 	m_roughness = &roughness;
@@ -113,8 +117,55 @@ Material::Material(Texture& albedo, Texture& normal, Texture& roughness, Texture
 
 }
 
-Material::Material(Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic, Texture& displacement)
+Material::Material(const char* name, Texture& albedo, Texture& normal, Texture& roughness, float ao, float metallic)
 {
+	m_name = name;
+	m_albedo = &albedo;
+	m_normal = &normal;
+	m_roughness = &roughness;
+	m_ao = nullptr;
+	m_metallic = nullptr;
+	m_displacement = nullptr;
+
+	m_albedoColour = glm::vec3(1.f);
+	m_roughnessValue = 0.0f;
+	m_aoValue = ao;
+	m_metallicValue = metallic;
+
+	m_hasAlbedoTexture = true;
+	m_hasNormalTexture = true;
+	m_hasRoughnessTexture = true;
+	m_hasAOTexture = false;
+	m_hasMetallicTexture = false;
+	m_hasDisplacementTexture = false;
+}
+
+Material::Material(const char* name, Texture& albedo, Texture& roughness, float ao, float metallic)
+{
+	m_name = name;
+	m_albedo = &albedo;
+	m_normal = nullptr;
+	m_roughness = &roughness;
+	m_ao = nullptr;
+	m_metallic = nullptr;
+	m_displacement = nullptr;
+
+	m_albedoColour = glm::vec3(1.f);
+	m_roughnessValue = 0.0f;
+	m_aoValue = ao;
+	m_metallicValue = metallic;
+
+	m_hasAlbedoTexture = true;
+	m_hasNormalTexture = false;
+	m_hasRoughnessTexture = true;
+	m_hasAOTexture = false;
+	m_hasMetallicTexture = false;
+	m_hasDisplacementTexture = false;
+}
+
+Material::Material(const char* name, Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic, Texture& displacement)
+{
+	m_name = name;
 	m_albedo = &albedo;
 	m_normal = &normal;
 	m_roughness = &roughness;

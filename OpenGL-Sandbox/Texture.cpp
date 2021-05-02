@@ -105,6 +105,15 @@ void Texture::LoadImageData() {
 			__debugbreak();
 		}
 
+		switch (GetComponents()) {
+
+		case 1: SetFormat(GL_RED); break;
+		case 3: SetFormat(GL_RGB); break;
+		case 4: SetFormat(GL_RGBA); break;
+
+		default: break;
+		}
+
 	} else {
 		std::cout << "[ERROR]: failed to load data, no path \n";
 	}

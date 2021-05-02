@@ -2,17 +2,23 @@
 
 Model::Model()
 {
+	m_path = "";
+}
+
+Model::Model(const char* path, const char* name)
+{
+	m_path = path;
+	m_name = name;
 }
 
 Model::~Model()
 {
 }
 
-void Model::Load(const char* filepath) {
+void Model::Load() {
 
-	m_path = filepath;
 	Assimp::Importer importer;
-	const aiScene* scene = importer.ReadFile(filepath, 
+	const aiScene* scene = importer.ReadFile(m_path, 
 		aiProcess_Triangulate |
 		aiProcess_GenSmoothNormals |
 		aiProcess_OptimizeMeshes |
@@ -27,7 +33,7 @@ void Model::Load(const char* filepath) {
 		return;
 	}
 	else {
-		printf("[MODEL LOADER]: Opening - %s \n", filepath);
+		printf("[MODEL LOADER]: Opening - %s \n", m_path.c_str());
 		LoadNode(scene->mRootNode, scene);
 
 	}
@@ -35,14 +41,16 @@ void Model::Load(const char* filepath) {
 }
 
 void Model::Create() {
-
+	for (const auto& m : m_meshes) {
+		m->Create();
+	}
 }
 
 void Model::Render(Shader* shader)
 {
 	UpdateModel();
 	for (size_t i = 0; i < m_meshes.size(); i++) {
-		shader->SetMat4f("u_Model", this->GetModel(), false);
+		shader->SetMat4f("u_Model", GetModel() * m_meshes[i]->GetModel(), false);
 		m_materials[i]->Bind(shader);
 		m_meshes[i]->Render();
 	}
@@ -60,15 +68,75 @@ glm::mat4 Model::GetModelMatrix()
 	return this->GetModel();
 }
 
+void Model::Update(std::vector<Material*>& materials)
+{
+	if (ImGui::TreeNode(m_name.c_str())) {
+		ImGui::DragFloat3(std::string(m_name + " Translation").c_str(), (float*)GetTranslationPtr(), 0.1f);
+		ImGui::DragFloat3(std::string(m_name + " Scale").c_str(), (float*)GetScalePtr(), 0.1f);
+		ImGui::DragFloat3(std::string(m_name + " Rotation").c_str(), (float*)GetRotationPtr(), 0.1f);
+		for (size_t i = 0; i < m_meshes.size(); i++)
+		{
+			if (ImGui::TreeNode(m_meshes[i]->GetName().c_str())) {
+				ImGui::DragFloat3(std::string(m_meshes[i]->GetName() + " Translation").c_str(), (float*)m_meshes[i]->GetTranslationPtr(), 0.1f);
+				ImGui::DragFloat3(std::string(m_meshes[i]->GetName() + " Scale").c_str(), (float*)m_meshes[i]->GetScalePtr(), 0.1f);
+				ImGui::DragFloat3(std::string(m_meshes[i]->GetName() + " Rotation").c_str(), (float*)m_meshes[i]->GetRotationPtr(), 0.1f);
+				
+				// Simple selection popup (if you want to show the current selection inside the Button itself,
+				// you may want to build a string using the "###" operator to preserve a constant ID with a variable label)
+				if (ImGui::Button("Select Material"))
+					ImGui::OpenPopup("my_select_popup");
+				ImGui::SameLine();
+				ImGui::TextUnformatted(m_materials[i]->GetName().c_str());
+				if (ImGui::BeginPopup("my_select_popup"))
+				{
+					ImGui::Text("Materials");
+					ImGui::Separator();
+					for (int j = 0; j < materials.size(); j++)
+						if (ImGui::Selectable(materials[j]->GetName().c_str())) {
+							m_materials[i] = materials[j];
+						}
+							
+					ImGui::EndPopup();
+				}
+
+				ImGui::TreePop();
+			}
+		}
+		/*
+		static int selected_material = -1;
+		static bool toggles[] = { true, false, false, false, false };
+		
+		// Simple selection popup (if you want to show the current selection inside the Button itself,
+		// you may want to build a string using the "###" operator to preserve a constant ID with a variable label)
+		if (ImGui::Button("Select.."))
+			ImGui::OpenPopup("my_select_popup");
+		ImGui::SameLine();
+		ImGui::TextUnformatted(selected_material == -1 ? "<None>" : materials[selected_material]->GetName().c_str());
+		if (ImGui::BeginPopup("my_select_popup"))
+		{
+			ImGui::Text("Materials");
+			ImGui::Separator();
+			for (int i = 0; i < materials.size(); i++)
+				if (ImGui::Selectable(materials[i]->GetName().c_str()))
+					selected_material = i;
+			ImGui::EndPopup();
+		}
+		*/
+		ImGui::TreePop();
+	}
+}
+
 std::vector<Material*> Model::GetMaterials() const
 {
 	return m_materials;
 }
 
-void Model::SetMaterial(Material* material, unsigned int index)
+void Model::SetMaterial(Material* material)
 {
-	if (index <= m_materials.size())
-		m_materials[index] = material;
+	for (size_t i = 0; i < m_materials.size(); i++)
+	{
+		m_materials[i] = material;
+	}
 
 }
 
@@ -91,7 +159,7 @@ void Model::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 	std::vector<Vertex> m_vertices;
 	std::vector<unsigned int> m_indices;
 	m_vertices = std::vector<Vertex>(mesh->mNumVertices);
-
+	//
 	bool hasTangents = mesh->HasTangentsAndBitangents();
 
 	Vertex v;
@@ -124,10 +192,11 @@ void Model::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 	}
 
 	Material* l_material = new Material;
+	aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 	if (mesh->mMaterialIndex >= 0)
 	{
-		aiMaterial* material = scene->mMaterials[mesh->mMaterialIndex];
 		
+		l_material->SetName(material->GetName().C_Str());
 		std::string texturePath = m_path.substr(0, m_path.find_last_of("\\/"));
 		texturePath.append("/");
 
@@ -168,7 +237,7 @@ void Model::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 			aiColor3D color(0.f, 0.f, 0.f);
 			material->Get(AI_MATKEY_COLOR_SPECULAR, color);
 			color.r == 0.f ? color.r = 0.1 : color.r = color.r;
-			l_material->SetMetallic(color.r);
+			l_material->SetMetallic(0.f);
 		};
 
 		if (!roughnessStr.empty()) {
@@ -181,7 +250,7 @@ void Model::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 			l_material->UseRoughnessTexture(false);
 			aiColor3D color(0.f, 0.f, 0.f);
 			material->Get(AI_MATKEY_COLOR_REFLECTIVE, color);
-			l_material->SetRoughness(color.r);
+			l_material->SetRoughness(1.f);
 		};
 
 		if (!aoStr.empty()) {
@@ -192,12 +261,12 @@ void Model::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 		}
 		else {
 			l_material->UseAOTexture(false);
-			l_material->SetAO(1.0);
+			l_material->SetAO(0.5);
 		};
 
 	}
-
-	Mesh* l_mesh = new Mesh(m_vertices, m_indices);
+	
+	Mesh* l_mesh = new Mesh(material->GetName().C_Str(), m_vertices, m_indices);
 	m_meshes.push_back(l_mesh);
 	m_materials.push_back(l_material);
 	m_vertices.clear();

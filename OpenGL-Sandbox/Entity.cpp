@@ -43,6 +43,21 @@ glm::vec3 Entity::GetScale()
 	return m_scale;
 }
 
+glm::vec3* Entity::GetTranslationPtr()
+{
+	return &m_translate;
+}
+
+glm::vec3* Entity::GetScalePtr()
+{
+	return &m_scale;
+}
+
+glm::vec3* Entity::GetRotationPtr()
+{
+	return &m_rotation;
+}
+
 void Entity::SetModel(glm::mat4* model)
 {
 	m_model = *model;

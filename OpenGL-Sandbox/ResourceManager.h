@@ -2,6 +2,7 @@
 #include <vector>
 
 #include "Material.h"
+#include "Model.h"
 
 class ResourceManager
 {
@@ -13,17 +14,22 @@ public:
 	void Load(Material* material);
 	void Load(std::vector<Texture*> textureArray);
 	void Load(std::vector<Material*> materialArray);
+	void Load(Model* model);
 
-	void Update();
+	void Update(std::vector<Material*> &materialsList);
 
 private:
 
 
-	int m_current, m_last;
+	int m_textureCurrentCount, m_textureLastCount;
+	int m_modelCurrentCount, m_modelLastCount;
 
-	int m_iter; // TODO use stack method instead of standalone iterator 
 	std::unordered_map<std::string, Texture*> m_textureMap;
 	std::vector<Texture*> m_textures;
 	std::vector<std::future<void>> m_textureFutures;
+
+	std::unordered_map<std::string, Model*> m_modelMap;
+	std::vector<Model*> m_models;
+	std::vector<std::future<void>> m_modelFutures;
 };
 

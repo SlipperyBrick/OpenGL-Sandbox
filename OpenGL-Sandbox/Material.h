@@ -6,14 +6,19 @@ class Material
 {
 public:
 	Material();
-	Material(Texture& albedo);
-	Material(glm::vec3 albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic);
-	Material(Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic);
-	Material(Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, float metallic);
-	Material(Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic, Texture& displacement);
+	Material(const char* name, Texture& albedo);
+	Material(const char* name, glm::vec3 albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic);
+	Material(const char* name, Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic);
+	Material(const char* name, Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, float metallic);
+	Material(const char* name, Texture& albedo, Texture& normal, Texture& roughness, float ao, float metallic);
+	Material(const char* name, Texture& albedo, Texture& roughness, float ao, float metallic);
+	Material(const char* name, Texture& albedo, Texture& normal, Texture& roughness, Texture& ao, Texture& metallic, Texture& displacement);
     ~Material();
 
 #pragma region Get/Set
+	inline void SetName(const char* name) { m_name = name; };
+	inline std::string GetName() { return m_name; };
+
 	inline void SetAlbedo(Texture* albedo) {  m_albedo = albedo; };
 	inline void SetAlbedo(glm::vec3 albedo) { m_albedoColour = albedo; };
 	inline Texture* GetAlbedo() const { return m_albedo; };
@@ -55,6 +60,8 @@ public:
     void Bind(Shader* shader);
 
 private:
+
+	std::string m_name;
 
 	Texture* m_albedo;
 	Texture* m_normal;

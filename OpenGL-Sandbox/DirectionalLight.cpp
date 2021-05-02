@@ -11,7 +11,7 @@ DirectionalLight::DirectionalLight(float shadowWidth, float shadowHeight, int fi
 	: Light(shadowWidth, shadowHeight, colour,  intensity)
 {
 	m_direction = direction;
-	m_projection = glm::ortho(-25.0f, 25.0f, -25.0f, 25.0f, -20.0f, 100.0f);
+	m_projection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, -0.0f, 100.0f);
 	m_filterLevel = filterLevel;
 }
 

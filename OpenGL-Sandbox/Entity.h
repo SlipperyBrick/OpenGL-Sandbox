@@ -17,6 +17,10 @@ public:
 	glm::vec3 GetRotation ();
 	glm::vec3 GetScale    ();
 
+	glm::vec3* GetTranslationPtr();
+	glm::vec3* GetScalePtr();
+	glm::vec3* GetRotationPtr();
+
 	void SetModel(glm::mat4* model);
 	glm::mat4 GetModel();
 	glm::mat4* GetModelPtr();
