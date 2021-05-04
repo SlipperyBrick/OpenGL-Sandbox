@@ -22,9 +22,8 @@ void Model::Load() {
 		aiProcess_Triangulate |
 		aiProcess_GenSmoothNormals |
 		aiProcess_OptimizeMeshes |
+		aiProcess_ValidateDataStructure |
 		aiProcess_OptimizeGraph |
-		aiProcess_SortByPType |
-		aiProcess_SplitLargeMeshes |
 		aiProcess_CalcTangentSpace |
 		aiProcess_JoinIdenticalVertices);
 
@@ -48,24 +47,13 @@ void Model::Create() {
 
 void Model::Render(Shader* shader)
 {
-	UpdateModel();
+	
+	shader->SetMat4f("u_Model", m_model, false);
 	for (size_t i = 0; i < m_meshes.size(); i++) {
-		shader->SetMat4f("u_Model", GetModel() * m_meshes[i]->GetModel(), false);
 		m_materials[i]->Bind(shader);
 		m_meshes[i]->Render();
 	}
 
-}
-
-void Model::ResetModel()
-{
-	for (auto m : m_meshes)
-		m->ResetModel();
-}
-
-glm::mat4 Model::GetModelMatrix()
-{
-	return this->GetModel();
 }
 
 void Model::Update(std::vector<Material*>& materials)
@@ -77,10 +65,7 @@ void Model::Update(std::vector<Material*>& materials)
 		for (size_t i = 0; i < m_meshes.size(); i++)
 		{
 			if (ImGui::TreeNode(m_meshes[i]->GetName().c_str())) {
-				ImGui::DragFloat3(std::string(m_meshes[i]->GetName() + " Translation").c_str(), (float*)m_meshes[i]->GetTranslationPtr(), 0.1f);
-				ImGui::DragFloat3(std::string(m_meshes[i]->GetName() + " Scale").c_str(), (float*)m_meshes[i]->GetScalePtr(), 0.1f);
-				ImGui::DragFloat3(std::string(m_meshes[i]->GetName() + " Rotation").c_str(), (float*)m_meshes[i]->GetRotationPtr(), 0.1f);
-				
+
 				// Simple selection popup (if you want to show the current selection inside the Button itself,
 				// you may want to build a string using the "###" operator to preserve a constant ID with a variable label)
 				if (ImGui::Button("Select Material"))
@@ -202,9 +187,9 @@ void Model::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 
 		std::string albedoStr = GetTextures(material, aiTextureType_DIFFUSE, texturePath);
 		std::string normalStr = GetTextures(material, aiTextureType_NORMALS, texturePath);
-		std::string specularStr = GetTextures(material, aiTextureType_SPECULAR, texturePath);
-		std::string roughnessStr = GetTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, texturePath);
-		std::string aoStr = GetTextures(material, aiTextureType_AMBIENT_OCCLUSION, texturePath);
+		std::string specularStr; //GetTextures(material, aiTextureType_SPECULAR, texturePath);
+		std::string roughnessStr; //GetTextures(material, aiTextureType_DIFFUSE_ROUGHNESS, texturePath);
+		std::string aoStr; //(material, aiTextureType_AMBIENT_OCCLUSION, texturePath);
 		
 		if (!albedoStr.empty()) {
 			Texture* t = new Texture(albedoStr);
@@ -237,7 +222,7 @@ void Model::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 			aiColor3D color(0.f, 0.f, 0.f);
 			material->Get(AI_MATKEY_COLOR_SPECULAR, color);
 			color.r == 0.f ? color.r = 0.1 : color.r = color.r;
-			l_material->SetMetallic(0.f);
+			l_material->SetMetallic(1.f);
 		};
 
 		if (!roughnessStr.empty()) {
@@ -261,7 +246,7 @@ void Model::LoadMesh(aiMesh* mesh, const aiScene* scene) {
 		}
 		else {
 			l_material->UseAOTexture(false);
-			l_material->SetAO(0.5);
+			l_material->SetAO(1.f);
 		};
 
 	}

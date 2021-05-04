@@ -65,7 +65,7 @@ void Entity::SetModel(glm::mat4* model)
 
 glm::mat4 Entity::GetModel()
 {
-	this->UpdateModel();
+	//this->UpdateModel();
 	return m_model;
 }
 

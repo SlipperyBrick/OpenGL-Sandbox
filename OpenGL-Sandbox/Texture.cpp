@@ -55,13 +55,13 @@ GLuint const Texture::GetTextureID()
 void Texture::Bind(const GLint textureUnit)
 {
 	glActiveTexture(GL_TEXTURE0 + textureUnit);
-	glBindTexture(this->m_textureType, m_id);
+	glBindTexture(m_textureType, m_id);
 }
 
 void Texture::Unbind()
 {
 	glActiveTexture(0);
-	glBindTexture(m_textureType, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void Texture::CreateTexture2D()
@@ -72,7 +72,7 @@ void Texture::CreateTexture2D()
 	if (m_data2D) {
 
 		m_textureType = GL_TEXTURE_2D;
-		glBindTexture(this->m_textureType, m_id);
+		glBindTexture(GL_TEXTURE_2D, m_id);
 
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -81,7 +81,7 @@ void Texture::CreateTexture2D()
 		glTexImage2D(GL_TEXTURE_2D, 0, m_format, m_width, m_height, 0, m_format, GL_UNSIGNED_BYTE, m_data2D);
 		glGenerateMipmap(GL_TEXTURE_2D);
 
-		glBindTexture(this->m_textureType, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
 
 	} else {
 		
@@ -132,8 +132,8 @@ void Texture::CreateDrawTexture(unsigned int width, unsigned int height) {
 	glBindTexture(GL_TEXTURE_2D, m_id);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);	// Framebuffer texture size - resolution scale, i.e., width * height = 100% scale
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 

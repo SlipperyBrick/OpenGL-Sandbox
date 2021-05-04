@@ -21,13 +21,13 @@ uniform vec3 u_cameraPosition;
                                      
 void main()                                   
 {       
-    vs_position = vec4(u_Model * vec4(position, 1.f)).xyz;
-    vs_texcoord = textureCoords;
-    vs_normal = mat3(transpose(inverse(u_Model))) * normal;
-    
-    vs_directionLightPosition = u_DirectionLightTransform * u_Model * vec4(position, 1.f);
-    vs_cameraPosition = u_cameraPosition;
-
-    gl_Position = u_Projection * u_View * u_Model * vec4(position, 1.f);
+   vs_position = vec4(u_Model * vec4(position, 1.f)).xyz;
+   vs_texcoord = textureCoords;
+   vs_normal = mat3(transpose(inverse(u_Model))) * normal;
+   
+   vs_directionLightPosition = u_DirectionLightTransform * u_Model * vec4(position, 1.f);
+   vs_cameraPosition = u_cameraPosition;
+   
+   gl_Position = u_Projection * u_View * u_Model * vec4(position, 1.f);
 
 }

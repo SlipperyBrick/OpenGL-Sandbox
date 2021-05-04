@@ -25,6 +25,8 @@
 #include "Material.h"
 #include "ResourceManager.h"
 
+//https://google.github.io/filament/Filament.md.html#listing_glsldirectionallight
+
 Random Random::s_Instance;
 
 #pragma region Create Window & Camera
@@ -99,7 +101,7 @@ DirectionalLight dirLight(2024, 2024, 1, { 1, 1, 1 }, 0.f, { 0.5, -1, 0 });
 
 std::vector<PointLight> pointlights(1);
 
-SpotLight spotLight({ 0, 5, 0 }, { 1, 1, 1, 0 }, { 0, -1, 0 }, 40, 10, 1024, 1024, 0.1, 50);
+SpotLight spotLight({ 0, 5, 0 }, { 1, 1, 1, 0 }, { 0, -1, 0 }, 40, 10, 1024, 1024, 0.f, 100);
 #pragma endregion
 
 #pragma region Create Models
@@ -170,7 +172,7 @@ static void PBRScene(Shader* shader) {
 				(row - (nrRows / 2)) * spacing,
 				0.0f));
 
-			shader->SetMat4f("u_Model", sphere.GetModelMatrix(), false);
+			shader->SetMat4f("u_Model", sphere.GetModel(), false);
 			sphere.Render(shader);
 		}
 	}
@@ -178,42 +180,14 @@ static void PBRScene(Shader* shader) {
 }
 
 static void RenderScene(Shader* shader) {
-
-	skybox.Render(&camera);
+	
 	shader->Bind();
-
-	if (spotlightFlickering) {
-		float v0 = glfwGetTime() * spotlightFlickeringSpeed;
-		float v1 = (glm::fract(sin(v0)));
-		spotLight.SetIntensity(v1 * 5000);
-	}
-
-	dirLight.Bind(shader);
-	spotLight.Bind(shader, 0);
-	pointlights[0].Bind(shader, 0);
-
-	shader->Set1f("u_Time", glfwGetTime());
-	shader->SetVec3f("u_cameraPosition", camera.GetCameraPosition());
-	shader->SetMat4f("u_View", camera.GetViewMatrix(), false);
-	shader->SetMat4f("u_Projection", camera.GetProjectionMatrix(), false);
-
-	shader->SetVec3f("u_albedo", albedo);
-	shader->Set1f("u_metallic", metallic);
-	shader->Set1f("u_roughness", roughness);
-	shader->Set1f("u_ao", ao);
-
-	shader->Set1i("u_usePRB", usePBR);
 	sponza.Render(shader);
-
-	//shader->Set1i("u_usePRB", usePBR);
-	//quad.Render(shader);
-
 }
 
 //Shadow Passes 
 static void DirectionalShadowMapPass(DirectionalLight* dirLight) {
 
-	glCullFace(GL_FRONT);
 	dirShadowShader.Bind();
 	dirShadowShader.SetMat4f("u_DirectionLightTransform", dirLight->CalculateLightTransform(), false);
 
@@ -222,19 +196,17 @@ static void DirectionalShadowMapPass(DirectionalLight* dirLight) {
 	glClear(GL_DEPTH_BUFFER_BIT);
 
 	RenderScene(&dirShadowShader);
-	glCullFace(GL_BACK);
 
 };
 
 static void OmniShadowMapPass(PointLight* light) {
-	
-	glCullFace(GL_FRONT);
+
 	omniShadowShader.Bind();
 
 	omniShadowShader.SetVec3f("u_lightPos", (glm::vec3&)light->GetPosition());
 	omniShadowShader.Set1f("u_farPlane", light->GetFarPlane());
 
-	auto lightMatrices = light->CalculateLightTransform();
+	static std::vector<glm::mat4> lightMatrices = light->CalculateLightTransform();
 
 	omniShadowShader.SetMat4f("u_lightMatrices[0]", lightMatrices[0], false);
 	omniShadowShader.SetMat4f("u_lightMatrices[1]", lightMatrices[1], false);
@@ -250,7 +222,6 @@ static void OmniShadowMapPass(PointLight* light) {
 
 	RenderScene(&omniShadowShader);
 
-	glCullFace(GL_BACK);
 }
 
 /* ~TODO~ 
@@ -289,12 +260,10 @@ int main() {
 	prefilterMap.CreatePrefilterMap(&hdriCubemap);
 	brdfLUTMap.CreateBRDFLookUpTable();
 
-	rManager.Load(&GoldMaterial);
-	rManager.Load(&MarbleMaterial);
-	rManager.Load(&RockMaterial);
-	rManager.Load(&BrickMaterial);
-	rManager.Load(&StoneTilesMaterial);
-	rManager.Load(&StonePavementMaterial);
+	for (const auto& m : materialList)
+	{
+		rManager.Load(m);
+	}
 
 #pragma endregion
 
@@ -307,7 +276,6 @@ int main() {
 	knuckles.SetScale(glm::vec3(0.01));
 	sponza.SetScale(glm::vec3(0.01f));
 
-
 	rManager.Load(&sponza);
 	rManager.Load(&knuckles);
 	rManager.Load(&monkey);
@@ -316,6 +284,9 @@ int main() {
 
 #pragma endregion
 	
+	quadShader.Bind();
+	quadShader.Set1i("u_Frame", 0);
+
 	
 #pragma region Shader Texture Setup
 	shader.Bind();
@@ -339,7 +310,7 @@ int main() {
 	shader.Unbind();
 
 #pragma endregion
-	
+	sponza.UpdateModel();
 	glEnable(GL_CULL_FACE);
 	while (window.IsOpen()) {
 
@@ -348,12 +319,33 @@ int main() {
 		camera.Update();
 
 		renderTarget.Bind(window);
+
+		shader.Bind();
+		dirLight.Bind(&shader);
+		spotLight.Bind(&shader, 0);
+		pointlights[0].Bind(&shader, 0);
+
+		shader.SetVec3f("u_albedo", albedo);
+		shader.Set1f("u_metallic", metallic);
+		shader.Set1f("u_roughness", roughness);
+		shader.Set1f("u_ao", ao);
+
+		shader.SetVec3f("u_cameraPosition", camera.GetCameraPosition());
+		shader.SetMat4f("u_View", camera.GetViewMatrix(), false);
+		shader.SetMat4f("u_Projection", camera.GetProjectionMatrix(), false);
+		shader.Set1i("u_usePRB", usePBR);
+
 		//Shadow Passes
+
+		glCullFace(GL_FRONT);
 		DirectionalShadowMapPass(&dirLight); 
 		OmniShadowMapPass(&pointlights[0]);
 		OmniShadowMapPass(&spotLight);
+		glCullFace(GL_BACK);
 
 		renderTarget.Bind(window);
+
+		skybox.Render(&camera);
 		RenderScene(&shader);
 		renderTarget.Unbind();
 	
@@ -432,19 +424,16 @@ int main() {
 			ImGui::End();
 		}
 
+
 		quadShader.Bind();
-		
 		renderTarget.GetTexture()->Bind(0);
-		https://google.github.io/filament/Filament.md.html#listing_glsldirectionallight
-		quadShader.Set1i("u_Frame", 0);
 
-		quadShader.Set1i("u_BlurToggle", u_BlurToggle);
-		quadShader.Set1f("u_BlurStrength", u_BlurStrength);
-		quadShader.Set1i("u_MonochromeToggle", u_MonochromeToggle);
-		quadShader.Set1i("u_WobbleToggle", u_WobbleToggle);
-
-		quadShader.SetVec2f("u_Resolution", glm::vec2(window.GetBufferWidth(), window.GetBufferHeight()));
-		quadShader.Set1f("u_Offset", glfwGetTime());
+		//quadShader.Set1i("u_BlurToggle", u_BlurToggle);
+		//quadShader.Set1f("u_BlurStrength", u_BlurStrength);
+		//quadShader.Set1i("u_MonochromeToggle", u_MonochromeToggle);
+		//quadShader.Set1i("u_WobbleToggle", u_WobbleToggle);
+		//quadShader.SetVec2f("u_Resolution", glm::vec2(window.GetBufferWidth(), window.GetBufferHeight()));
+		//quadShader.Set1f("u_Offset", glfwGetTime());
 
 		//Draw quad
 		renderQuad();

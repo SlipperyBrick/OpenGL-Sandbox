@@ -5,7 +5,7 @@
 #include "Entity.h"
 #include "Vertex.hpp"
 
-class Mesh : public Entity
+class Mesh
 {
 public:
 	Mesh();

@@ -28,8 +28,8 @@ public:
 	void UpdateModel();
 	void ResetModel();
 
-private:
 	glm::mat4 m_model;
+private:
 	glm::vec3 m_translate;
 	glm::vec3 m_rotation;
 	glm::vec3 m_scale;

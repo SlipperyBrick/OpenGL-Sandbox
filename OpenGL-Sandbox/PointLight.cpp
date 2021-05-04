@@ -27,17 +27,17 @@ PointLight::~PointLight()
 void PointLight::Bind(Shader* shader, int index)
 {
 
-    std::string pos = "pointLight[" + std::to_string(index) + "].m_position";
-    shader->SetVec3f(pos.c_str(), (glm::vec3&)GetPosition());
+    const std::string pos = "pointLight[" + std::to_string(index) + "].m_position";
+    shader->SetVec3f(pos.c_str(), m_position);
 
-    std::string col = "pointLight[" + std::to_string(index) + "].m_colour";
-    shader->SetVec4f(col.c_str(), glm::vec4(GetColour(), GetIntensity()));
+    const std::string col = "pointLight[" + std::to_string(index) + "].m_colour";
+    shader->SetVec4f(col.c_str(), glm::vec4(m_colour, m_intensity));
 
-    std::string shadowMap = "pointLight[" + std::to_string(index) + "].m_omniShadowMap";
+    const std::string shadowMap = "pointLight[" + std::to_string(index) + "].m_omniShadowMap";
     shader->Set1i(shadowMap.c_str(), TU_POINT_SHADOW_MAP0 + index);
 
-    std::string shadowFarPlane = "pointLight[" + std::to_string(index) + "].m_omniFarPlane";
-    shader->Set1f(shadowFarPlane.c_str(), GetFarPlane());
+    const std::string shadowFarPlane = "pointLight[" + std::to_string(index) + "].m_omniFarPlane";
+    shader->Set1f(shadowFarPlane.c_str(), m_farPlane);
 
     GetShadowMapPtr()->BindTexture(TU_POINT_SHADOW_MAP0 + index);
 

@@ -30,9 +30,8 @@ void Window::Update() {
 }
 
 void Window::Clear() {
-	
+
 	glfwSwapBuffers(m_window);
-	
 	glClearColor(1.f, 0.f, 0.f, 1.f);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -195,7 +194,6 @@ void Window::Init() {
 	}
 	else
 		std::cout << "[GLEW]: OK\n" << glGetString(GL_VERSION) << std::endl;
-
 	glEnable(GL_DEPTH_TEST);
 	
 	glfwSetWindowUserPointer(m_window, this);
@@ -203,7 +201,7 @@ void Window::Init() {
 
 	glDepthFunc(GL_LEQUAL); // set depth function to less than AND equal for skybox depth trick.
 	glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
-
+	
 	//glEnable(GL_BLEND);
 	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }

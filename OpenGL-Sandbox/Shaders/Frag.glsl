@@ -138,7 +138,6 @@ float CalcOmniShadowFactor(PointLight light, int index) {
     return shadow;
 }
 
-
 float CalcDirectionalShadowFactor(DirectionLight light, vec3 normal) {
 
 	vec3 projCoords = vs_directionLightPosition.xyz / vs_directionLightPosition.w;
@@ -169,8 +168,6 @@ float CalcDirectionalShadowFactor(DirectionLight light, vec3 normal) {
 
 	return shadow;
 }
-
-
 
 
 float DistributionGGX(vec3 N, vec3 H, float roughness) {
@@ -380,6 +377,6 @@ void main() {
     
     }
 
-    colour = vec4(CalculatePBR(l_albedo.xyz, l_normal, l_metallic, l_roughness, l_ao), l_albedo.a);
+    colour = vec4(CalculatePBR(l_albedo.xyz, l_normal, l_metallic, l_roughness, l_ao), 1.f);
 
 }

@@ -33,9 +33,6 @@ public:
 	void Create();
 	void Render(Shader* shader);
 
-	void ResetModel();
-	glm::mat4 GetModelMatrix();
-
 	void Update(std::vector<Material*>& materials);
 
 	std::vector<Material*> GetMaterials() const;
