@@ -18,197 +18,197 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
+    <ClCompile Include="src\main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Camera.cpp">
+    <ClCompile Include="src\Renderer\Camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Shader.cpp">
+    <ClCompile Include="src\Renderer\Shader.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Window.cpp">
+    <ClCompile Include="src\Core\Window.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Mesh.cpp">
+    <ClCompile Include="src\Renderer\Mesh.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Entity.cpp">
+    <ClCompile Include="src\Core\Entity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GuiLayer.cpp">
+    <ClCompile Include="src\Core\GuiLayer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Texture.cpp">
+    <ClCompile Include="src\Renderer\Texture.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Light.cpp">
+    <ClCompile Include="src\Renderer\Light.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="PointLight.cpp">
+    <ClCompile Include="src\Renderer\PointLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Model.cpp">
+    <ClCompile Include="src\Renderer\Model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Skybox.cpp">
+    <ClCompile Include="src\Renderer\Skybox.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Utility.cpp">
+    <ClCompile Include="src\Core\Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="DirectionalLight.cpp">
+    <ClCompile Include="src\Renderer\DirectionalLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ShadowMap.cpp">
+    <ClCompile Include="src\Renderer\ShadowMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="OmniShadowMap.cpp">
+    <ClCompile Include="src\Renderer\OmniShadowMap.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SpotLight.cpp">
+    <ClCompile Include="src\Renderer\SpotLight.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="RenderTarget.cpp">
+    <ClCompile Include="src\Renderer\RenderTarget.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="Material.cpp">
+    <ClCompile Include="src\Renderer\Material.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="ResourceManager.cpp">
+    <ClCompile Include="src\Core\ResourceManager.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="vendor\stbimage\stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h">
+    <ClInclude Include="src\Renderer\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Shader.h">
+    <ClInclude Include="src\Renderer\Shader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Window.h">
+    <ClInclude Include="src\Core\Window.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Mesh.h">
+    <ClInclude Include="src\Renderer\Mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Entity.h">
+    <ClInclude Include="src\Core\Entity.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GuiLayer.h">
+    <ClInclude Include="src\Core\GuiLayer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Texture.h">
+    <ClInclude Include="src\Renderer\Texture.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Light.h">
+    <ClInclude Include="src\Renderer\Light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PointLight.h">
+    <ClInclude Include="src\Renderer\PointLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Model.h">
+    <ClInclude Include="src\Renderer\Model.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Skybox.h">
+    <ClInclude Include="src\Renderer\Skybox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Utility.h">
+    <ClInclude Include="src\Core\Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Random.hpp">
+    <ClInclude Include="src\Core\Random.hpp">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="Vertex.hpp">
+    <ClInclude Include="src\Renderer\Vertex.hpp">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="Timer.hpp">
+    <ClInclude Include="src\Core\Timer.hpp">
       <Filter>Resource Files</Filter>
     </ClInclude>
-    <ClInclude Include="DirectionalLight.h">
+    <ClInclude Include="src\Renderer\DirectionalLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ShadowMap.h">
+    <ClInclude Include="src\Renderer\ShadowMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="OmniShadowMap.h">
+    <ClInclude Include="src\Renderer\OmniShadowMap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SpotLight.h">
+    <ClInclude Include="src\Renderer\SpotLight.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="RenderTarget.h">
+    <ClInclude Include="src\Renderer\RenderTarget.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Material.h">
+    <ClInclude Include="src\Renderer\Material.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ResourceManager.h">
+    <ClInclude Include="src\Core\ResourceManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="Shaders\Frag.glsl">
+    <None Include="assets\Shaders\Frag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\Vertex.glsl">
+    <None Include="assets\Shaders\Vertex.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\SkyboxFrag.glsl">
+    <None Include="assets\Shaders\SkyboxFrag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\SkyboxVert.glsl">
+    <None Include="assets\Shaders\SkyboxVert.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\EquirectangularToCubemapFrag.glsl">
+    <None Include="assets\Shaders\EquirectangularToCubemapFrag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\EquirectangularToCubemapVert.glsl">
+    <None Include="assets\Shaders\EquirectangularToCubemapVert.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\IrradianceConvolutionFrag.glsl">
+    <None Include="assets\Shaders\IrradianceConvolutionFrag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\FlatShadingFrag.glsl">
+    <None Include="assets\Shaders\FlatShadingFrag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\PrefilterFrag.glsl">
+    <None Include="assets\Shaders\PrefilterFrag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\AnimationFrag.glsl">
+    <None Include="assets\Shaders\AnimationFrag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\AnimationVert.glsl">
+    <None Include="assets\Shaders\AnimationVert.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\BRDFShaderFrag.glsl">
+    <None Include="assets\Shaders\BRDFShaderFrag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\BRDFShaderVert.glsl">
+    <None Include="assets\Shaders\BRDFShaderVert.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\DirectionShadowMapFrag.glsl">
+    <None Include="assets\Shaders\DirectionShadowMapFrag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\DirectionShadowMapVert.glsl">
+    <None Include="assets\Shaders\DirectionShadowMapVert.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\OmniShadowMapShaderVert.glsl">
+    <None Include="assets\Shaders\OmniShadowMapShaderVert.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\OmniShadowMapShaderFrag.glsl">
+    <None Include="assets\Shaders\OmniShadowMapShaderFrag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\OmniShadowMapShaderGeom.glsl">
+    <None Include="assets\Shaders\OmniShadowMapShaderGeom.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\QuadShaderFrag.glsl">
+    <None Include="assets\Shaders\QuadShaderFrag.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Shaders\QuadShaderVert.glsl">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="Basic.frag">
+    <None Include="assets\Shaders\QuadShaderVert.glsl">
       <Filter>Resource Files\Shaders</Filter>
     </None>
   </ItemGroup>

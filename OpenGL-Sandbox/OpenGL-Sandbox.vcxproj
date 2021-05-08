@@ -9,14 +9,6 @@
       <Configuration>Release</Configuration>
       <Platform>Win32</Platform>
     </ProjectConfiguration>
-    <ProjectConfiguration Include="Debug|x64">
-      <Configuration>Debug</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
-    <ProjectConfiguration Include="Release|x64">
-      <Configuration>Release</Configuration>
-      <Platform>x64</Platform>
-    </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
@@ -39,19 +31,6 @@
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
-    <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v142</PlatformToolset>
-    <WholeProgramOptimization>true</WholeProgramOptimization>
-    <CharacterSet>Unicode</CharacterSet>
-  </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
   </ImportGroup>
@@ -63,23 +42,11 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
-  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
-  </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <LinkIncremental>false</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LinkIncremental>true</LinkIncremental>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -88,12 +55,14 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)ImGui</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)src;$(ProjectDir)assets;$(ProjectDir)vendor;$(SolutionDir)Dependencies\glm\includes;$(SolutionDir)Dependencies\glfw\includes;$(SolutionDir)Dependencies\glew\includes;$(SolutionDir)Dependencies\assimp\includes;$(SolutionDir)Dependencies\stb_image\includes</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>glew32.lib;glfw3.lib;assimp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib;$(SolutionDir)Dependencies\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -112,102 +81,74 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
   </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
-  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <ClCompile>
-      <WarningLevel>Level3</WarningLevel>
-      <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
-      <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <ConformanceMode>true</ConformanceMode>
-    </ClCompile>
-    <Link>
-      <SubSystem>Console</SubSystem>
-      <EnableCOMDATFolding>true</EnableCOMDATFolding>
-      <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>true</GenerateDebugInformation>
-    </Link>
-  </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Camera.cpp" />
-    <ClCompile Include="DirectionalLight.cpp" />
-    <ClCompile Include="Entity.cpp" />
-    <ClCompile Include="GuiLayer.cpp" />
-    <ClCompile Include="Light.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="Material.cpp" />
-    <ClCompile Include="Mesh.cpp" />
-    <ClCompile Include="Model.cpp" />
-    <ClCompile Include="OmniShadowMap.cpp" />
-    <ClCompile Include="PointLight.cpp" />
-    <ClCompile Include="RenderTarget.cpp" />
-    <ClCompile Include="ResourceManager.cpp" />
-    <ClCompile Include="Shader.cpp" />
-    <ClCompile Include="ShadowMap.cpp" />
-    <ClCompile Include="Skybox.cpp" />
-    <ClCompile Include="SpotLight.cpp" />
-    <ClCompile Include="Texture.cpp" />
-    <ClCompile Include="Utility.cpp" />
-    <ClCompile Include="Window.cpp" />
+    <ClCompile Include="src\Renderer\Camera.cpp" />
+    <ClCompile Include="src\Renderer\DirectionalLight.cpp" />
+    <ClCompile Include="src\Core\Entity.cpp" />
+    <ClCompile Include="src\Core\GuiLayer.cpp" />
+    <ClCompile Include="src\Renderer\Light.cpp" />
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\Renderer\Material.cpp" />
+    <ClCompile Include="src\Renderer\Mesh.cpp" />
+    <ClCompile Include="src\Renderer\Model.cpp" />
+    <ClCompile Include="src\Renderer\OmniShadowMap.cpp" />
+    <ClCompile Include="src\Renderer\PointLight.cpp" />
+    <ClCompile Include="src\Renderer\RenderTarget.cpp" />
+    <ClCompile Include="src\Core\ResourceManager.cpp" />
+    <ClCompile Include="src\Renderer\Shader.cpp" />
+    <ClCompile Include="src\Renderer\ShadowMap.cpp" />
+    <ClCompile Include="src\Renderer\Skybox.cpp" />
+    <ClCompile Include="src\Renderer\SpotLight.cpp" />
+    <ClCompile Include="src\Renderer\Texture.cpp" />
+    <ClCompile Include="src\Core\Utility.cpp" />
+    <ClCompile Include="src\Core\Window.cpp" />
+    <ClCompile Include="vendor\stbimage\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Camera.h" />
-    <ClInclude Include="DirectionalLight.h" />
-    <ClInclude Include="Entity.h" />
-    <ClInclude Include="GuiLayer.h" />
-    <ClInclude Include="Light.h" />
-    <ClInclude Include="Material.h" />
-    <ClInclude Include="Mesh.h" />
-    <ClInclude Include="Model.h" />
-    <ClInclude Include="OmniShadowMap.h" />
-    <ClInclude Include="PointLight.h" />
-    <ClInclude Include="Random.hpp" />
-    <ClInclude Include="RenderTarget.h" />
-    <ClInclude Include="ResourceManager.h" />
-    <ClInclude Include="Shader.h" />
-    <ClInclude Include="ShadowMap.h" />
-    <ClInclude Include="Skybox.h" />
-    <ClInclude Include="SpotLight.h" />
-    <ClInclude Include="Texture.h" />
-    <ClInclude Include="Timer.hpp" />
-    <ClInclude Include="Utility.h" />
-    <ClInclude Include="Vertex.hpp" />
-    <ClInclude Include="Window.h" />
+    <ClInclude Include="src\Renderer\Camera.h" />
+    <ClInclude Include="src\Renderer\DirectionalLight.h" />
+    <ClInclude Include="src\Core\Entity.h" />
+    <ClInclude Include="src\Core\GuiLayer.h" />
+    <ClInclude Include="src\Renderer\Light.h" />
+    <ClInclude Include="src\Renderer\Material.h" />
+    <ClInclude Include="src\Renderer\Mesh.h" />
+    <ClInclude Include="src\Renderer\Model.h" />
+    <ClInclude Include="src\Renderer\OmniShadowMap.h" />
+    <ClInclude Include="src\Renderer\PointLight.h" />
+    <ClInclude Include="src\Core\Random.hpp" />
+    <ClInclude Include="src\Renderer\RenderTarget.h" />
+    <ClInclude Include="src\Core\ResourceManager.h" />
+    <ClInclude Include="src\Renderer\Shader.h" />
+    <ClInclude Include="src\Renderer\ShadowMap.h" />
+    <ClInclude Include="src\Renderer\Skybox.h" />
+    <ClInclude Include="src\Renderer\SpotLight.h" />
+    <ClInclude Include="src\Renderer\Texture.h" />
+    <ClInclude Include="src\Core\Timer.hpp" />
+    <ClInclude Include="src\Core\Utility.h" />
+    <ClInclude Include="src\Renderer\Vertex.hpp" />
+    <ClInclude Include="src\Core\Window.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Basic.frag" />
-    <None Include="Shaders\AnimationFrag.glsl" />
-    <None Include="Shaders\AnimationVert.glsl" />
-    <None Include="Shaders\BRDFShaderFrag.glsl" />
-    <None Include="Shaders\BRDFShaderVert.glsl" />
-    <None Include="Shaders\DirectionShadowMapFrag.glsl" />
-    <None Include="Shaders\DirectionShadowMapVert.glsl" />
-    <None Include="Shaders\EquirectangularToCubemapFrag.glsl" />
-    <None Include="Shaders\EquirectangularToCubemapVert.glsl" />
-    <None Include="Shaders\FlatShadingFrag.glsl" />
-    <None Include="Shaders\Frag.glsl" />
-    <None Include="Shaders\IrradianceConvolutionFrag.glsl" />
-    <None Include="Shaders\OmniShadowMapShaderFrag.glsl" />
-    <None Include="Shaders\OmniShadowMapShaderGeom.glsl" />
-    <None Include="Shaders\OmniShadowMapShaderVert.glsl" />
-    <None Include="Shaders\PrefilterFrag.glsl" />
-    <None Include="Shaders\QuadShaderFrag.glsl" />
-    <None Include="Shaders\QuadShaderVert.glsl" />
-    <None Include="Shaders\SkyboxFrag.glsl" />
-    <None Include="Shaders\SkyboxVert.glsl" />
-    <None Include="Shaders\Vertex.glsl" />
+    <None Include="assets\Shaders\AnimationFrag.glsl" />
+    <None Include="assets\Shaders\AnimationVert.glsl" />
+    <None Include="assets\Shaders\BRDFShaderFrag.glsl" />
+    <None Include="assets\Shaders\BRDFShaderVert.glsl" />
+    <None Include="assets\Shaders\DirectionShadowMapFrag.glsl" />
+    <None Include="assets\Shaders\DirectionShadowMapVert.glsl" />
+    <None Include="assets\Shaders\EquirectangularToCubemapFrag.glsl" />
+    <None Include="assets\Shaders\EquirectangularToCubemapVert.glsl" />
+    <None Include="assets\Shaders\FlatShadingFrag.glsl" />
+    <None Include="assets\Shaders\Frag.glsl" />
+    <None Include="assets\Shaders\IrradianceConvolutionFrag.glsl" />
+    <None Include="assets\Shaders\OmniShadowMapShaderFrag.glsl" />
+    <None Include="assets\Shaders\OmniShadowMapShaderGeom.glsl" />
+    <None Include="assets\Shaders\OmniShadowMapShaderVert.glsl" />
+    <None Include="assets\Shaders\PrefilterFrag.glsl" />
+    <None Include="assets\Shaders\QuadShaderFrag.glsl" />
+    <None Include="assets\Shaders\QuadShaderVert.glsl" />
+    <None Include="assets\Shaders\SkyboxFrag.glsl" />
+    <None Include="assets\Shaders\SkyboxVert.glsl" />
+    <None Include="assets\Shaders\Vertex.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
