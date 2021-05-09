@@ -66,6 +66,10 @@
       <AdditionalDependencies>glew32.lib;glfw3.lib;assimp.lib;opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>$(SolutionDir)Dependencies\glfw\lib;$(SolutionDir)Dependencies\glew\lib;$(SolutionDir)Dependencies\assimp\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
+    <PostBuildEvent>
+      <Command>copy "$(ProjectDir)vendor\assimp\assimp.dll" "$(TargetDir)"
+copy "$(ProjectDir)vendor\glew\glew32.dll" "$(TargetDir)"</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
