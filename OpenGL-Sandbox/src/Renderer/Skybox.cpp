@@ -3,7 +3,7 @@
 Skybox::Skybox() {
 
 	this->m_shader = new Shader();
-	m_shader->CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/SkyboxFrag.glsl");
+	m_shader->CreateFromFile("assets/Shaders/SkyboxVert.glsl", "assets/Shaders/SkyboxFrag.glsl");
 
 	this->m_mesh = nullptr;
 	this->m_cubemapID = 0;
@@ -16,7 +16,7 @@ Skybox::Skybox(Texture* cubemap)
 {
 
 	this->m_shader = new Shader();
-	m_shader->CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/SkyboxFrag.glsl");
+	m_shader->CreateFromFile("assets/Shaders/SkyboxVert.glsl", "assets/Shaders/SkyboxFrag.glsl");
 
 	this->m_mesh = nullptr;
 	this->m_cubemapID = 0;

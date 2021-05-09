@@ -45,52 +45,52 @@ RenderTarget renderTarget(window.GetBufferWidth(), window.GetBufferHeight());
 
 #pragma region Create Texture & Material
 
-Texture HDRI("Textures/HDRIs/pink_sunrise_4k.hdr");
+Texture HDRI("assets/Textures/HDRIs/pink_sunrise_4k.hdr");
 Texture hdriCubemap;
 Texture irradianceCubemap;
 Texture prefilterMap;
 Texture brdfLUTMap;
 
-Texture Gold_Albedo	  ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Albedo_4K__schvfgwp.jpg");
-Texture Gold_Normal	  ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Normal_4K__schvfgwp.jpg");
-Texture Gold_Roughness("Textures/PBR/Gold (Au)_schvfgwp_Metal/Roughness_4K__schvfgwp.jpg");
-Texture Gold_AO		  ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
-Texture Gold_Metallic ("Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
+Texture Gold_Albedo	  ("assets/Textures/PBR/Gold (Au)_schvfgwp_Metal/Albedo_4K__schvfgwp.jpg");
+Texture Gold_Normal	  ("assets/Textures/PBR/Gold (Au)_schvfgwp_Metal/Normal_4K__schvfgwp.jpg");
+Texture Gold_Roughness("assets/Textures/PBR/Gold (Au)_schvfgwp_Metal/Roughness_4K__schvfgwp.jpg");
+Texture Gold_AO		  ("assets/Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
+Texture Gold_Metallic ("assets/Textures/PBR/Gold (Au)_schvfgwp_Metal/Metalness_4K__schvfgwp.jpg");
 
-Texture Marble_Albedo   ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Albedo.jpg");
-Texture Marble_Normal   ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Normal.jpg");
-Texture Marble_Roughness("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Roughness.jpg");
-Texture Marble_AO		("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_AO.jpg");
-Texture Marble_Metallic ("Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Metalness.jpg");
+//Texture Marble_Albedo   ("assets/Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Albedo.jpg");
+//Texture Marble_Normal   ("assets/Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Normal.jpg");
+//Texture Marble_Roughness("assets/Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Roughness.jpg");
+//Texture Marble_AO		("assets/Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_AO.jpg");
+//Texture Marble_Metallic ("assets/Textures/PBR/marble_polished_vdkgdbpv/vdkgdbpv_4K_Metalness.jpg");
 
-Texture Rock_Albedo("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Albedo.jpg");
-Texture Rock_Normal("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Normal.jpg");
-Texture Rock_Roughness("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Roughness.jpg");
-Texture Rock_AO("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_AO.jpg");
-Texture Rock_Metallic("Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Displacement.jpg");
+//Texture Rock_Albedo("assets/Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Albedo.jpg");
+//Texture Rock_Normal("assets/Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Normal.jpg");
+//Texture Rock_Roughness("assets/Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Roughness.jpg");
+//Texture Rock_AO("assets/Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_AO.jpg");
+//Texture Rock_Metallic("assets/Textures/PBR/rock_rough_vdljfeglw/vdljfeglw_4K_Displacement.jpg");
 
-Texture Brick_Albedo("Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/Albedo_4K__th5mdawaw.png");
-Texture Brick_Normal("Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/Normal_4K__th5mdawaw.png");
-Texture Brick_Roughness("Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/Roughness_4K__th5mdawaw.png");
-Texture Brick_AO("Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/AO_4K__th5mdawaw.png");
+//Texture Brick_Albedo("assets/Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/Albedo_4K__th5mdawaw.png");
+//Texture Brick_Normal("assets/Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/Normal_4K__th5mdawaw.png");
+//Texture Brick_Roughness("assets/Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/Roughness_4K__th5mdawaw.png");
+//Texture Brick_AO("assets/Textures/PBR/Rough Brick Wall 2x2 M_th5mdawaw/AO_4K__th5mdawaw.png");
 
-Texture Stone_Tiles_Albedo("Textures/PBR/Stone Tile 2x2_ujzjdcao/Albedo_4K__ujzjdcao.png");
-Texture Stone_Tiles_Normal("Textures/PBR/Stone Tile 2x2_ujzjdcao/Normal_4K__ujzjdcao.png");
-Texture Stone_Tiles_Roughness("Textures/PBR/Stone Tile 2x2_ujzjdcao/Roughness_4K__ujzjdcao.png");
-Texture Stone_Tiles_AO("Textures/PBR/Stone Tile 2x2_ujzjdcao/AO_4K__ujzjdcao.png");
+//Texture Stone_Tiles_Albedo("assets/Textures/PBR/Stone Tile 2x2_ujzjdcao/Albedo_4K__ujzjdcao.png");
+//Texture Stone_Tiles_Normal("assets/Textures/PBR/Stone Tile 2x2_ujzjdcao/Normal_4K__ujzjdcao.png");
+//Texture Stone_Tiles_Roughness("assets/Textures/PBR/Stone Tile 2x2_ujzjdcao/Roughness_4K__ujzjdcao.png");
+//Texture Stone_Tiles_AO("assets/Textures/PBR/Stone Tile 2x2_ujzjdcao/AO_4K__ujzjdcao.png");
 
-Texture Stone_Pavement_Albedo	 ("Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/Albedo_4K__ujwnafvew.png");
-Texture Stone_Pavement_Normal	 ("Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/Normal_4K__ujwnafvew.png");
-Texture Stone_Pavement_Roughness("Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/Roughness_4K__ujwnafvew.png");
-Texture Stone_Pavement_AO       ("Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/AO_4K__ujwnafvew.png");
+//Texture Stone_Pavement_Albedo	 ("assets/Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/Albedo_4K__ujwnafvew.png");
+//Texture Stone_Pavement_Normal	 ("assets/Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/Normal_4K__ujwnafvew.png");
+//Texture Stone_Pavement_Roughness("assets/Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/Roughness_4K__ujwnafvew.png");
+//Texture Stone_Pavement_AO       ("assets/Textures/PBR/Stone Pavement 2x2 M_ujwnafvew/AO_4K__ujwnafvew.png");
 
 
 Material GoldMaterial("Gold Material", Gold_Albedo,   Gold_Normal,   Gold_Roughness,   Gold_AO,   Gold_Metallic);
-Material MarbleMaterial("Marble Material", Marble_Albedo, Marble_Normal, Marble_Roughness, Marble_AO, 1.f);
-Material RockMaterial("Rock Material", Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO, Rock_Metallic);
-Material BrickMaterial("Brick Material", Brick_Albedo, Brick_Normal, Brick_Roughness, Brick_AO, 0.f);
-Material StoneTilesMaterial("Stone Trim Material", Stone_Tiles_Albedo, Stone_Tiles_Normal, Stone_Tiles_Roughness, Stone_Tiles_AO, 0.1f);
-Material StonePavementMaterial("Stone Pavement Material", Stone_Pavement_Albedo, Stone_Pavement_Normal, Stone_Pavement_Roughness, Stone_Pavement_AO, 0.1f);
+//Material MarbleMaterial("Marble Material", Marble_Albedo, Marble_Normal, Marble_Roughness, Marble_AO, 1.f);
+//Material RockMaterial("Rock Material", Rock_Albedo, Rock_Normal, Rock_Roughness, Rock_AO, Rock_Metallic);
+//Material BrickMaterial("Brick Material", Brick_Albedo, Brick_Normal, Brick_Roughness, Brick_AO, 0.f);
+//Material StoneTilesMaterial("Stone Trim Material", Stone_Tiles_Albedo, Stone_Tiles_Normal, Stone_Tiles_Roughness, Stone_Tiles_AO, 0.1f);
+//Material StonePavementMaterial("Stone Pavement Material", Stone_Pavement_Albedo, Stone_Pavement_Normal, Stone_Pavement_Roughness, Stone_Pavement_AO, 0.1f);
 
 
 Skybox skybox(&hdriCubemap);
@@ -105,11 +105,11 @@ SpotLight spotLight({ 0, 5, 0 }, { 1, 1, 1, 0 }, { 0, -1, 0 }, 40, 10, 1024, 102
 #pragma endregion
 
 #pragma region Create Models
-Model quad("Models/quad.fbx", "Quad");
-Model monkey("Models/monkey.fbx", "Monkey");
-Model sphere("Models/Sphere64.fbx", "Sphere");
-Model sponza("Models/Sponza/sponza.obj", "Sponza");
-Model knuckles("Models/Uganda_Knuckles/Uganda_Knuckles.obj", "Knuckles");
+//Model quad("assets/Models/quad.fbx", "Quad");
+//Model monkey("assets/Models/monkey.fbx", "Monkey");
+//Model sphere("assets/Models/Sphere64.fbx", "Sphere");
+Model sponza("assets/Models/Sponza/sponza.obj", "Sponza");
+//Model knuckles("assets/Models/Uganda_Knuckles/Uganda_Knuckles.obj", "Knuckles");
 #pragma endregion
 
 #pragma region Uniform Variables
@@ -165,15 +165,12 @@ static void PBRScene(Shader* shader) {
 			// on direct lighting.
 			shader->Set1f("u_roughness", glm::clamp((float)col / (float)nrColumns, 0.05f, 1.0f));
 
-			sphere.ResetModel();
-			sphere.SetRotation({ 90.f, 0.f, 0.f });
-			sphere.SetTranslation(glm::vec3(
-				(col - (nrColumns / 2)) * spacing,
-				(row - (nrRows / 2)) * spacing,
-				0.0f));
+			//sphere.ResetModel();
+			//sphere.SetRotation({ 90.f, 0.f, 0.f });
+			//sphere.SetTranslation(glm::vec3((col - (nrColumns / 2)) * spacing, (row - (nrRows / 2)) * spacing, 0.0f));
 
-			shader->SetMat4f("u_Model", sphere.GetModel(), false);
-			sphere.Render(shader);
+			//shader->SetMat4f("u_Model", sphere.GetModel(), false);
+			//sphere.Render(shader);
 		}
 	}
 
@@ -236,21 +233,21 @@ int main() {
 
 	std::vector<Material*> materialList;
 
-	materialList.push_back(&MarbleMaterial);
+	//materialList.push_back(&MarbleMaterial);
 	materialList.push_back(&GoldMaterial);
-	materialList.push_back(&RockMaterial);
-	materialList.push_back(&BrickMaterial);
-	materialList.push_back(&StoneTilesMaterial);
-	materialList.push_back(&StonePavementMaterial);
+	//materialList.push_back(&RockMaterial);
+	//materialList.push_back(&BrickMaterial);
+	//materialList.push_back(&StoneTilesMaterial);
+	//materialList.push_back(&StonePavementMaterial);
 	GuiLayer GuiLayer(window.GetWindow());
 
 	ResourceManager rManager;
 	pointlights[0] = PointLight({ 1, 1, 1, 0.f }, { 0.f, 5.0f, 0.0f }, 1024, 1024, 0.0, 100);
 
-	shader.CreateFromFile("Shaders/Vertex.glsl", "Shaders/Frag.glsl");
-	dirShadowShader.CreateFromFile("Shaders/DirectionShadowMapVert.glsl", "Shaders/DirectionShadowMapFrag.glsl");
-	omniShadowShader.CreateFromFile("Shaders/OmniShadowMapShaderVert.glsl", "Shaders/OmniShadowMapShaderGeom.glsl", "Shaders/OmniShadowMapShaderFrag.glsl");
-	quadShader.CreateFromFile("Shaders/QuadShaderVert.glsl", "Shaders/QuadShaderFrag.glsl");
+	shader.CreateFromFile("assets/Shaders/Vertex.glsl", "assets/Shaders/Frag.glsl");
+	dirShadowShader.CreateFromFile("assets/Shaders/DirectionShadowMapVert.glsl", "assets/Shaders/DirectionShadowMapFrag.glsl");
+	omniShadowShader.CreateFromFile("assets/Shaders/OmniShadowMapShaderVert.glsl", "assets/Shaders/OmniShadowMapShaderGeom.glsl", "assets/Shaders/OmniShadowMapShaderFrag.glsl");
+	quadShader.CreateFromFile("assets/Shaders/QuadShaderVert.glsl", "assets/Shaders/QuadShaderFrag.glsl");
 
 #pragma region Load Textures
 
@@ -270,17 +267,17 @@ int main() {
 #pragma region Load Models
 
 
-	quad.SetScale({ 5, 0.01, 5 });
-	quad.SetTranslation({ 0, -2, 0 });
-	monkey.SetRotation({260, 0, 0});
-	knuckles.SetScale(glm::vec3(0.01));
-	sponza.SetScale(glm::vec3(0.01f));
+	//quad.SetScale({ 5, 0.01, 5 });
+	//quad.SetTranslation({ 0, -2, 0 });
+	//monkey.SetRotation({260, 0, 0});
+	//knuckles.SetScale(glm::vec3(0.01));
+	//sponza.SetScale(glm::vec3(0.01f));
 
 	rManager.Load(&sponza);
-	rManager.Load(&knuckles);
-	rManager.Load(&monkey);
-	rManager.Load(&sphere);
-	rManager.Load(&quad);
+	//rManager.Load(&knuckles);
+	//rManager.Load(&monkey);
+	//rManager.Load(&sphere);
+	//rManager.Load(&quad);
 
 #pragma endregion
 	
@@ -359,8 +356,8 @@ int main() {
 			GuiLayer.Begin();
 
 			ImGui::Begin("Models");
-			sphere.Update(materialList);
-			quad.Update(materialList);
+			//sphere.Update(materialList);
+			//quad.Update(materialList);
 			sponza.Update(materialList);
 			ImGui::End();
 

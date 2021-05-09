@@ -217,7 +217,7 @@ void Texture::CreateCubemapFromHDRI(Texture& HDRI) {
 
 	//Create Shader for converting;
 	Shader equirectangularToCubemapShader;
-	equirectangularToCubemapShader.CreateFromFile("Shaders/EquirectangularToCubemapVert.glsl", "Shaders/EquirectangularToCubemapFrag.glsl");
+	equirectangularToCubemapShader.CreateFromFile("assets/Shaders/EquirectangularToCubemapVert.glsl", "assets/Shaders/EquirectangularToCubemapFrag.glsl");
 	
 	//create framebuffer and renderbuffer
 	glGenFramebuffers(1, &m_captureFBO);
@@ -274,7 +274,7 @@ void Texture::CreateIrradianceTexture(Texture* Cubemap) {
 	unsigned int resoultion = 64;
 
 	Shader IrradianceConvolutionShader;
-	IrradianceConvolutionShader.CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/IrradianceConvolutionFrag.glsl");
+	IrradianceConvolutionShader.CreateFromFile("assets/Shaders/SkyboxVert.glsl", "assets/Shaders/IrradianceConvolutionFrag.glsl");
 	
 	glGenTextures(1, &m_id);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
@@ -323,7 +323,7 @@ void Texture::CreatePrefilterMap(Texture* Cubemap) {
 	unsigned int resoultion = 128;
 
 	Shader prefilterShader;
-	prefilterShader.CreateFromFile("Shaders/SkyboxVert.glsl", "Shaders/PrefilterFrag.glsl");
+	prefilterShader.CreateFromFile("assets/Shaders/SkyboxVert.glsl", "assets/Shaders/PrefilterFrag.glsl");
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, Cubemap->GetTextureID());
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
@@ -390,7 +390,7 @@ void Texture::CreateBRDFLookUpTable() {
 	this->m_textureType = GL_TEXTURE_2D;
 
 	Shader brdfShader;
-	brdfShader.CreateFromFile("Shaders/BRDFShaderVert.glsl", "Shaders/BRDFShaderFrag.glsl");
+	brdfShader.CreateFromFile("assets/Shaders/BRDFShaderVert.glsl", "assets/Shaders/BRDFShaderFrag.glsl");
 
 	glGenTextures(1, &m_id);
 	glBindTexture(GL_TEXTURE_2D, m_id);
